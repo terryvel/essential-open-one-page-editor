@@ -1,0 +1,350 @@
+{
+  "Suppliers": [
+    "Microsoft",
+    "CloudBuy",
+    "Dexma",
+    "Pardot",
+    "Oracle"
+  ],
+  "Locations": [
+    "Stockholm"
+  ],
+  "Value Stream": [
+    "Advertising Research",
+    "Design Advert",
+    "Initiate Advertising",
+    "Perform Segmentation Planning",
+    "Perform CRM",
+    "Contact Clients",
+    "Initiate Acquisition",
+    "Manage Clients",
+    "Set-up Clients"
+  ],
+  "Org": [
+    "Marketing",
+    "Client Services",
+    "Acquisitions"
+  ],
+  "Info": [
+    "MS0365 Ad Database",
+    "Pardot Ad Database"
+  ],
+  "Applications": [
+    "ADEXCell Energy Manager",
+    "Oracle Planning and Budgeting Cloud",
+    "CloudBuy",
+    "Microsoft O365",
+    "Microsoft Dynamics",
+    "Pardot",
+    "Oracle Netsuite",
+    "Euromonitor International"
+  ],
+  "Value Stream Name": "Client Advert to Engage",
+  "Value Stream Description": "End-to-end flow from ad creation to client engagement.",
+  "Initiators": [
+    "Marketer",
+    "Client"
+  ],
+  "Initiation Events": [
+    "Business Sales Initiative"
+  ],
+  "Initiation Conditions": [
+    "Requirement to Increase Brand Recognition & Sales"
+  ],
+  "Outcome Conditions": [
+    "Clients recognise the brand",
+    "Clients know the product set"
+  ],
+  "Outcomes": [
+    "Sales Increase"
+  ],
+  "Impacted Business Services": [
+    "Consumer Tariff",
+    "Consumer Storage",
+    "Consumer Solar"
+  ],
+  "Value Stages Matrix": {
+    "stages": [
+      {
+        "name": "Advert Creation",
+        "description": "Creation of the advert and collateral",
+        "businessRoleTypes": [
+          "Business Division"
+        ]
+      },
+      {
+        "name": "Advert Placement",
+        "description": "Placement of the advert on media and on boards",
+        "businessRoleTypes": [
+          "Business Division"
+        ]
+      },
+      {
+        "name": "Advert Recognition & Action",
+        "description": "Sight of the advert and rersdponse by clients",
+        "businessRoleTypes": [
+          "Business Division",
+          "Consumer"
+        ]
+      },
+      {
+        "name": "Client Engagement",
+        "description": "Engagement by the client",
+        "businessRoleTypes": [
+          "Business Division",
+          "Consumer"
+        ]
+      }
+    ],
+    "rows": [
+      "Participants",
+      "Supporting Business Capabilities",
+      "Supporting Business Processes",
+      "Target Emotions",
+      "Entrance Events",
+      "Entrance Conditions",
+      "Exit Events",
+      "Exit Conditions",
+      "KPIs"
+    ],
+    "data": {
+      "Participants": [
+        [
+          "Business Division",
+          "Project Manager",
+          "Marketer"
+        ],
+        [
+          "Business Division",
+          "Marketer",
+          "Installer"
+        ],
+        [
+          "Business Division",
+          "Consumer",
+          "Marketer",
+          "Consumer"
+        ],
+        [
+          "Business Division",
+          "Consumer",
+          "Marketer",
+          "Consumer"
+        ]
+      ],
+      "Supporting Business Capabilities": [
+        [
+          "Advertising Management",
+          "Marketing Management"
+        ],
+        [
+          "Health & Safety Management",
+          "Brand Management"
+        ],
+        [
+          "Flow Management",
+          "Facilities Management"
+        ],
+        [
+          "Acquisition Management",
+          "Advertising Management"
+        ]
+      ],
+      "Supporting Business Processes": [
+        [
+          "Advertising Research",
+          "Design Advert",
+          "Initiate Advertising"
+        ],
+        [
+          "Perform Segmentation Planning"
+        ],
+        [
+          "Perform CRM"
+        ],
+        [
+          "Contact Clients",
+          "Initiate Acquisition",
+          "Manage Clients",
+          "Set-up Clients"
+        ]
+      ],
+      "Target Emotions": [
+        "Excited",
+        "Excited",
+        "Excited",
+        "Surprised"
+      ],
+      "Entrance Events": [
+        [
+          "Management Sign-off"
+        ],
+        [
+          "Advert Approved"
+        ],
+        [
+          "Adverts published in media"
+        ],
+        [
+          "Client Interested in Product"
+        ]
+      ],
+      "Entrance Conditions": [
+        [
+          "Campaign Budget Approved"
+        ],
+        [
+          "Campaign Budget Approved"
+        ],
+        [
+          "Billboard Locations Agreed",
+          "Advert Produced"
+        ],
+        [
+          "Billboard Locations Agreed"
+        ]
+      ],
+      "Exit Events": [
+        [
+          "Advert Approved"
+        ],
+        [
+          "Adverts Placed"
+        ],
+        [
+          "Contact Initiated"
+        ],
+        [
+          "Client Sale"
+        ]
+      ],
+      "Exit Conditions": [
+        [
+          "Advert Produced"
+        ],
+        [
+          "Billboard Locations Agreed",
+          "Print & TV slots agreed"
+        ],
+        [
+          "Clients recognise the brand"
+        ],
+        [
+          "Clients know the product set",
+          "Client requests visit to discuss product"
+        ]
+      ],
+      "KPIs": [
+        [
+          "Time to create: 2000Minutes"
+        ],
+        [
+          "Time to Install: 120Minutes"
+        ],
+        [
+          "Time to associate with brand: 5Minutes"
+        ],
+        [
+          "Time to contact: 60Minutes"
+        ]
+      ]
+    }
+  },
+  "Suppliers Applications Mapping": {
+    "Microsoft": [
+      "Microsoft O365",
+      "Microsoft Dynamics"
+    ],
+    "CloudBuy": [
+      "CloudBuy"
+    ],
+    "Dexma": [
+      "ADEXCell Energy Manager"
+    ],
+    "Pardot": [
+      "Pardot"
+    ],
+    "Oracle": [
+      "Oracle Planning and Budgeting Cloud",
+      "Oracle Netsuite"
+    ]
+  },
+  "Value Stream Associations": {
+    "Advertising Research": {
+      "Org": "Marketing",
+      "Location": "Stockholm",
+      "Applications": [
+        "Euromonitor International"
+      ],
+      "Info": []
+    },
+    "Design Advert": {
+      "Org": "Marketing",
+      "Location": "Stockholm",
+      "Applications": [],
+      "Info": [
+        "MS0365 Ad Database",
+        "Pardot Ad Database"
+      ]
+    },
+    "Initiate Advertising": {
+      "Org": "Marketing",
+      "Location": "Stockholm",
+      "Applications": [
+        "CloudBuy"
+      ],
+      "Info": []
+    },
+    "Perform Segmentation Planning": {
+      "Org": "Marketing",
+      "Location": "Stockholm",
+      "Applications": [],
+      "Info": [
+        "Pardot Ad Database"
+      ]
+    },
+    "Perform CRM": {
+      "Org": "Client Services",
+      "Location": "Stockholm",
+      "Applications": [
+        "Microsoft Dynamics"
+      ],
+      "Info": []
+    },
+    "Contact Clients": {
+      "Org": "Client Services",
+      "Location": "Stockholm",
+      "Applications": [
+        "Microsoft Dynamics"
+      ],
+      "Info": []
+    },
+    "Initiate Acquisition": {
+      "Org": "Acquisitions",
+      "Location": "Stockholm",
+      "Applications": [
+        "ADEXCell Energy Manager",
+        "Oracle Planning and Budgeting Cloud",
+        "Microsoft O365",
+        "Oracle Netsuite"
+      ],
+      "Info": []
+    },
+    "Manage Clients": {
+      "Org": "Client Services",
+      "Location": "Stockholm",
+      "Applications": [
+        "Microsoft Dynamics"
+      ],
+      "Info": []
+    },
+    "Set-up Clients": {
+      "Org": "Client Services",
+      "Location": "Stockholm",
+      "Applications": [
+        "Microsoft Dynamics"
+      ],
+      "Info": []
+    }
+  }
+}
