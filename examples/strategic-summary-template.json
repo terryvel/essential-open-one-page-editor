@@ -1,0 +1,458 @@
+{
+  "Drivers": [
+    "Production Efficiency",
+    "Customer Retention",
+    "Increased Sales",
+    "Market Leading Customer Satisfaction"
+  ],
+  "Goals": [
+    {
+      "name": "All Suppliers Integrated into the Energy Platform by 2022",
+      "desc": "Enable seamless connection of all suppliers to the platform to ensure full participation and data exchange across the energy ecosystem."
+    },
+    {
+      "name": "Digital Transformation",
+      "desc": "Leverage new technologies to modernize operations, enhance efficiency, and deliver innovative services to customers."
+    },
+    {
+      "name": "Improve Customer Satisfaction",
+      "desc": "Provide reliable services, transparent communication, and user-friendly solutions that meet or exceed customer expectations."
+    },
+    {
+      "name": "Retaining and Developing a Deep Pool of Talent",
+      "desc": "Foster a culture of growth and learning to attract, retain, and upskill employees, ensuring a strong foundation of expertise."
+    },
+    {
+      "name": "Invest in Revenue Growth Opportunities",
+      "desc": "Identify and pursue initiatives, partnerships, and innovations that expand the business and create long-term value."
+    },
+    {
+      "name": "All Employees Briefed on Strategic Goals by 2020",
+      "desc": "Ensure every employee understands and aligns with the company’s mission, vision, and objectives to drive collective success."
+    },
+    {
+      "name": "Improve Safety",
+      "desc": "Promote a safe working environment by implementing best practices, monitoring risks, and prioritizing the well-being of all stakeholders."
+    }
+  ],
+  "Objectives": [
+    {
+      "name": "Create an Effective Energy Sharing Platform",
+      "desc": "Allow clients to share energy and feed back into the network where applicable",
+      "owner": "Engineering",
+      "performanceIndicator": "Supplier Platform Sign-up",
+      "targetPerformanceMetric": "Suppliers Onboarded - 75 - %"
+    },
+    {
+      "name": "Improve Energy Pricing Data Quality",
+      "desc": "Ensure accurate, timely, and consistent energy pricing data for decision-making",
+      "owner": "Finance",
+      "performanceIndicator": "Pricing Accuracy Rate",
+      "targetPerformanceMetric": "Accurate Pricing Data - 98 - %"
+    },
+    {
+      "name": "Proactive Identification of M&A Opportunities",
+      "desc": "Continuously scan the market to identify and evaluate strategic acquisition targets",
+      "owner": "Strategy",
+      "performanceIndicator": "Opportunities Identified",
+      "targetPerformanceMetric": "M&A Opportunities Evaluated - 10 - per year"
+    },
+    {
+      "name": "Provide an Efficient Operational Platform",
+      "desc": "Deliver reliable, scalable, and cost-effective systems that support daily operations",
+      "owner": "IT",
+      "performanceIndicator": "System Uptime",
+      "targetPerformanceMetric": "Platform Availability - 99.9 - %"
+    },
+    {
+      "name": "Reduce Finance Budget",
+      "desc": "Optimize financial operations and cut unnecessary costs to improve efficiency",
+      "owner": "Finance",
+      "performanceIndicator": "Operational Cost Reduction",
+      "targetPerformanceMetric": "Budget Reduction - 10 - % annually"
+    },
+    {
+      "name": "Simplify Client Reporting Processes",
+      "desc": "Streamline reporting workflows to provide clients with clear, timely information",
+      "owner": "Customer Success",
+      "performanceIndicator": "Report Delivery Efficiency",
+      "targetPerformanceMetric": "Standardized Reports Delivered - 95 - % on time"
+    },
+    {
+      "name": "Simplify Finance Processes",
+      "desc": "Standardize and automate finance activities to reduce complexity and errors",
+      "owner": "Finance",
+      "performanceIndicator": "Process Automation Rate",
+      "targetPerformanceMetric": "Automated Finance Tasks - 80 - %"
+    },
+    {
+      "name": "Implement a Transactive Energy Strategy",
+      "desc": "Enable real-time energy transactions between producers, consumers, and the grid",
+      "owner": "Engineering",
+      "performanceIndicator": "Transactions Executed via Platform",
+      "targetPerformanceMetric": "Energy Transactions Automated - 60 - %"
+    },
+    {
+      "name": "Increase Up Sales and Cross sales",
+      "desc": "Expand client value by offering complementary and upgraded products and services",
+      "owner": "Sales",
+      "performanceIndicator": "Cross-sell / Upsell Rate",
+      "targetPerformanceMetric": "Upsell & Cross-sell Revenue Growth - 20 - %"
+    },
+    {
+      "name": "Increasing Levels of Gross Sales",
+      "desc": "Boost overall sales performance through market expansion and improved offerings",
+      "owner": "Sales",
+      "performanceIndicator": "Gross Sales Growth",
+      "targetPerformanceMetric": "Gross Sales Increase - 15 - % annually"
+    },
+    {
+      "name": "Increasing Levels of Net New Business",
+      "desc": "Acquire new customers and revenue streams to strengthen market position",
+      "owner": "Sales",
+      "performanceIndicator": "New Customer Acquisition",
+      "targetPerformanceMetric": "New Clients Acquired - 200 - per year"
+    },
+    {
+      "name": "Manage our Clients Effectively",
+      "desc": "Enhance customer relationships by understanding needs and delivering value",
+      "owner": "Customer Success",
+      "performanceIndicator": "Client Satisfaction Score",
+      "targetPerformanceMetric": "Customer Satisfaction (CSAT) - 90 - %"
+    },
+    {
+      "name": "Reduce Client Reporting Delivery Time",
+      "desc": "Accelerate reporting cycles to provide clients with faster insights",
+      "owner": "Customer Success",
+      "performanceIndicator": "Average Report Delivery Time",
+      "targetPerformanceMetric": "Report Delivery within SLA - 95 - %"
+    },
+    {
+      "name": "Enhance Meter Data Analysis Capbabilities",
+      "desc": "Strengthen analytics tools to generate actionable insights from meter data",
+      "owner": "Data Analytics",
+      "performanceIndicator": "Data Processed and Analyzed",
+      "targetPerformanceMetric": "Meter Data Coverage - 90 - %"
+    },
+    {
+      "name": "Implement Energy Efficient Gameification",
+      "desc": "Encourage sustainable energy behaviors through engaging gamified experiences",
+      "owner": "Product",
+      "performanceIndicator": "User Engagement Rate",
+      "targetPerformanceMetric": "Active Participation in Gamification - 70 - %"
+    },
+    {
+      "name": "Focus on Advertising",
+      "desc": "Increase brand awareness and market presence through targeted campaigns",
+      "owner": "Marketing",
+      "performanceIndicator": "Campaign Reach",
+      "targetPerformanceMetric": "Brand Awareness Increase - 25 - %"
+    },
+    {
+      "name": "Aligning our Employees to our Strategic Goals",
+      "desc": "Ensure employees are clear and working to the strategic goals",
+      "owner": "HR",
+      "performanceIndicator": "Employees Trained",
+      "targetPerformanceMetric": "Employees Trained - 100 - %"
+    },
+    {
+      "name": "Developing and Training our Employees",
+      "desc": "Provide continuous learning opportunities to build skills and retain talent",
+      "owner": "HR",
+      "performanceIndicator": "Training Hours per Employee",
+      "targetPerformanceMetric": "Training Hours Completed - 40 - per employee annually"
+    },
+    {
+      "name": "Investment in Both Organic Growth and Acquisition Opportunities",
+      "desc": "Balance internal innovation with external acquisitions to drive long-term growth",
+      "owner": "Strategy",
+      "performanceIndicator": "Growth Initiatives Executed",
+      "targetPerformanceMetric": "Organic & Inorganic Growth Initiatives - 5 - per year"
+    },
+    {
+      "name": "Improve Asset Investment Planning",
+      "desc": "Optimize capital allocation by aligning investments with strategic priorities",
+      "owner": "Finance",
+      "performanceIndicator": "ROI on Investments",
+      "targetPerformanceMetric": "Planned Investments with ROI > 15% - 90 - %"
+    },
+    {
+      "name": "Targeting a Market Leading Cost:Net Revenue Ratio",
+      "desc": "Drive operational efficiency to achieve a cost-to-revenue ratio ahead of peers",
+      "owner": "Finance",
+      "performanceIndicator": "Cost-to-Revenue Ratio",
+      "targetPerformanceMetric": "Achieve Cost-to-Revenue Ratio < 40 - %"
+    },
+    {
+      "name": "Exploit Global Purchasing Power",
+      "desc": "Leverage scale to negotiate better terms and reduce procurement costs",
+      "owner": "Procurement",
+      "performanceIndicator": "Supplier Consolidation Savings",
+      "targetPerformanceMetric": "Procurement Cost Savings - 12 - % annually"
+    },
+    {
+      "name": "Manage our Risk and Regulatory Requirements Effectively",
+      "desc": "Maintain compliance and proactively manage risks across all business areas",
+      "owner": "Compliance",
+      "performanceIndicator": "Compliance Adherence Rate",
+      "targetPerformanceMetric": "Compliance Incidents - 0 - Zero Tolerance"
+    },
+    {
+      "name": "Utilise IoT for Predictive and Preventative Maintenance",
+      "desc": "Deploy IoT solutions to anticipate failures and reduce downtime",
+      "owner": "Engineering",
+      "performanceIndicator": "Maintenance Issues Predicted",
+      "targetPerformanceMetric": "Unplanned Downtime Reduced - 30 - %"
+    },
+    {
+      "name": "Optimise Filed Service Workforce",
+      "desc": "Maximize efficiency and productivity of field teams through smart scheduling",
+      "owner": "Operations",
+      "performanceIndicator": "Workforce Utilization Rate",
+      "targetPerformanceMetric": "Field Service Efficiency - 85 - %"
+    }
+  ],
+  "Strategic Plans": [
+    {
+      "name": "Effective Energy Monitoring and Sharing",
+      "desc": "Implement Effective Energy Monitoring and Sharing across platforms",
+      "startDate": "2021-06-01",
+      "endDate": "2024-12-01"
+    },
+    {
+      "name": "Maintenance Outsourcing",
+      "desc": "Where possible outsource maintenance to save costs",
+      "startDate": "2019-03-01",
+      "endDate": "2023-03-01"
+    },
+    {
+      "name": "Meter Supply Improvement",
+      "desc": "Review how the installation and supply of meters can be improved to reduce cost and increase customer satisfaction",
+      "startDate": "2018-05-01",
+      "endDate": "2023-12-01"
+    },
+    {
+      "name": "Business Process Automation",
+      "desc": "Investigate options for automating processes",
+      "startDate": "2022-01-01",
+      "endDate": "2027-06-01"
+    },
+    {
+      "name": "IT Rationalisation",
+      "desc": "Rationalise across applications and technologies where possible",
+      "startDate": "2019-09-01",
+      "endDate": "2025-05-01"
+    },
+    {
+      "name": "Country Consolidation",
+      "desc": "Consolidate processes and applications across countries",
+      "startDate": "2022-04-01",
+      "endDate": "2024-03-31"
+    },
+    {
+      "name": "Finance Optimization Program",
+      "desc": "Implement cost control measures and streamline budgeting processes to reduce overall finance spend",
+      "startDate": "2022-01-01",
+      "endDate": "2025-12-31"
+    },
+    {
+      "name": "Sales Growth Acceleration",
+      "desc": "Develop initiatives to expand cross-sell, upsell, and increase gross and net new sales",
+      "startDate": "2021-07-01",
+      "endDate": "2026-06-30"
+    },
+    {
+      "name": "Client Engagement Excellence",
+      "desc": "Implement structured programs and tools to enhance client management and accelerate reporting delivery",
+      "startDate": "2022-03-01",
+      "endDate": "2026-03-01"
+    },
+    {
+      "name": "Innovation and Market Expansion",
+      "desc": "Pursue both organic innovations and inorganic acquisitions to support long-term business expansion",
+      "startDate": "2022-09-01",
+      "endDate": "2027-09-01"
+    },
+    {
+      "name": "Strategic Asset Investment Planning",
+      "desc": "Develop frameworks and tools to optimize planning and prioritization of asset investments",
+      "startDate": "2023-01-01",
+      "endDate": "2026-12-31"
+    },
+    {
+      "name": "Cost Efficiency Excellence",
+      "desc": "Establish cost optimization initiatives to target best-in-class cost-to-revenue ratios",
+      "startDate": "2021-05-01",
+      "endDate": "2025-05-01"
+    },
+    {
+      "name": "Global Procurement Strategy",
+      "desc": "Consolidate global supplier base and leverage purchasing power to drive down costs",
+      "startDate": "2020-10-01",
+      "endDate": "2025-10-01"
+    },
+    {
+      "name": "Risk & Compliance Framework",
+      "desc": "Implement governance, risk, and compliance frameworks to meet regulatory requirements",
+      "startDate": "2021-01-01",
+      "endDate": "2024-12-31"
+    },
+    {
+      "name": "Advertising Expansion Program",
+      "desc": "Increase brand awareness through targeted campaigns and digital advertising initiatives",
+      "startDate": "2022-02-01",
+      "endDate": "2025-08-01"
+    },
+    {
+      "name": "Workforce Optimization Program",
+      "desc": "Deploy workforce management tools and training to improve field service productivity",
+      "startDate": "2023-04-01",
+      "endDate": "2026-04-01"
+    }
+  ],
+  "Driver Goals Mapping": {
+    "Production Efficiency": [
+      "All Suppliers Integrated into the Energy Platform by 2022",
+      "Digital Transformation"
+    ],
+    "Customer Retention": [
+      "Digital Transformation",
+      "Improve Customer Satisfaction",
+      "Retaining and Developing a Deep Pool of Talent"
+    ],
+    "Increased Sales": [
+      "Improve Customer Satisfaction",
+      "Retaining and Developing a Deep Pool of Talent",
+      "Invest in Revenue Growth Opportunities"
+    ],
+    "Market Leading Customer Satisfaction": [
+      "Improve Customer Satisfaction",
+      "All Employees Briefed on Strategic Goals by 2020",
+      "Improve Safety"
+    ]
+  },
+  "Goal Objectives Mapping": {
+    "All Suppliers Integrated into the Energy Platform by 2022": [
+      "Create an Effective Energy Sharing Platform"
+    ],
+    "Digital Transformation": [
+      "Create an Effective Energy Sharing Platform",
+      "Improve Energy Pricing Data Quality",
+      "Proactive Identification of M&A Opportunities",
+      "Provide an Efficient Operational Platform",
+      "Reduce Finance Budget",
+      "Simplify Client Reporting Processes",
+      "Simplify Finance Processes",
+      "Implement a Transactive Energy Strategy"
+    ],
+    "Improve Customer Satisfaction": [
+      "Increase Up Sales and Cross sales",
+      "Increasing Levels of Gross Sales",
+      "Increasing Levels of Net New Business",
+      "Manage our Clients Effectively",
+      "Reduce Client Reporting Delivery Time",
+      "Enhance Meter Data Analysis Capbabilities",
+      "Implement Energy Efficient Gameification",
+      "Focus on Advertising"
+    ],
+    "Retaining and Developing a Deep Pool of Talent": [
+      "Aligning our Employees to our Strategic Goals",
+      "Developing and Training our Employees"
+    ],
+    "Invest in Revenue Growth Opportunities": [
+      "Investment in Both Organic Growth and Acquisition Opportunities",
+      "Enhance Meter Data Analysis Capbabilities",
+      "Improve Asset Investment Planning",
+      "Targeting a Market Leading Cost:Net Revenue Ratio",
+      "Exploit Global Purchasing Power"
+    ],
+    "All Employees Briefed on Strategic Goals by 2020": [
+      "Aligning our Employees to our Strategic Goals"
+    ],
+    "Improve Safety": [
+      "Manage our Risk and Regulatory Requirements Effectively",
+      "Utilise IoT for Predictive and Preventative Maintenance",
+      "Optimise Filed Service Workforce"
+    ]
+  },
+  "Objective Strategic Plans Mapping": {
+    "Create an Effective Energy Sharing Platform": [
+      "Effective Energy Monitoring and Sharing",
+      "Maintenance Outsourcing",
+      "Meter Supply Improvement"
+    ],
+    "Improve Energy Pricing Data Quality": [
+      "Effective Energy Monitoring and Sharing"
+    ],
+    "Provide an Efficient Operational Platform": [
+      "Business Process Automation",
+      "IT Rationalisation",
+      "Country Consolidation",
+      "Maintenance Outsourcing"
+    ],
+    "Reduce Finance Budget": [
+      "Finance Optimization Program"
+    ],
+    "Simplify Client Reporting Processes": [
+      "Effective Energy Monitoring and Sharing",
+      "Country Consolidation"
+    ],
+    "Simplify Finance Processes": [
+      "Country Consolidation"
+    ],
+    "Implement a Transactive Energy Strategy": [
+      "Effective Energy Monitoring and Sharing"
+    ],
+    "Increase Up Sales and Cross sales": [
+      "Sales Growth Acceleration"
+    ],
+    "Increasing Levels of Gross Sales": [
+      "Sales Growth Acceleration"
+    ],
+    "Increasing Levels of Net New Business": [
+      "Sales Growth Acceleration"
+    ],
+    "Manage our Clients Effectively": [
+      "Client Engagement Excellence"
+    ],
+    "Reduce Client Reporting Delivery Time": [
+      "Client Engagement Excellence"
+    ],
+    "Enhance Meter Data Analysis Capbabilities": [
+      "Meter Supply Improvement"
+    ],
+    "Implement Energy Efficient Gameification": [
+      "Effective Energy Monitoring and Sharing"
+    ],
+    "Focus on Advertising": [
+      "Advertising Expansion Program"
+    ],
+    "Aligning our Employees to our Strategic Goals": [
+      "Effective Energy Monitoring and Sharing"
+    ],
+    "Developing and Training our Employees": [
+      "Meter Supply Improvement"
+    ],
+    "Investment in Both Organic Growth and Acquisition Opportunities": [
+      "Innovation and Market Expansion"
+    ],
+    "Improve Asset Investment Planning": [
+      "Strategic Asset Investment Planning"
+    ],
+    "Targeting a Market Leading Cost:Net Revenue Ratio": [
+      "Cost Efficiency Excellence"
+    ],
+    "Exploit Global Purchasing Power": [
+      "Global Procurement Strategy"
+    ],
+    "Manage our Risk and Regulatory Requirements Effectively": [
+      "Risk & Compliance Framework"
+    ],
+    "Utilise IoT for Predictive and Preventative Maintenance": [
+      "Effective Energy Monitoring and Sharing"
+    ],
+    "Optimise Filed Service Workforce": [
+      "Workforce Optimization Program"
+    ]
+  }
+}

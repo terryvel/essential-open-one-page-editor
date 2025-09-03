@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strategic Summary Editor</title>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc; --panel: #ffffff; --panel-2: #f1f5f9; --text: #0f172a;
+      --muted: #475569; --primary: #06b6d4; --primary-2: #0284c7;
+      --danger: #dc2626; --ok: #16a34a; --shadow: 0 16px 40px rgba(2,8,23,.12);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; } html, body { height: 100%; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 10% -10%, #e2e8f0 10%, var(--bg) 60%); color: var(--text); }
+    .wrap { max-width: 1200px; margin: 32px auto; padding: 0 16px 48px; }
+    header { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 18px; }
+    h1 { font-size: clamp(18px, 2.6vw, 28px); font-weight: 700; letter-spacing: .4px; margin: 0; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .global-actions { justify-content:flex-end; margin:6px 0 12px; }
+    button, .btn { border:1px solid transparent; background:linear-gradient(180deg,var(--primary),var(--primary-2));
+      color:#001018; font-weight:700; padding:10px 14px; border-radius:12px; cursor:pointer;
+      transition: transform .06s ease, filter .2s ease, background .2s ease, box-shadow .2s ease;
+      box-shadow: var(--shadow); }
+    button:hover { filter:brightness(1.06); } button:active { transform: translateY(1px) scale(.99); }
+    button:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+    .btn-secondary { background: linear-gradient(180deg,#eef2f7,#d9e0ea); color: var(--text); border-color:#cbd5e1; }
+    .btn-danger { background: linear-gradient(180deg,#fda4af,#ef4444); color:#3b0b0e; }
+    .box { background: linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid #e2e8f0; border-radius: var(--radius);
+      box-shadow: var(--shadow); min-height:120px; padding:14px; display:flex; flex-direction:column; }
+    /* Tabs styling (matching value-stream standalone) */
+    .tabs{ display:flex; gap:6px; flex-wrap:wrap; padding:0 8px; margin:16px 0 0; }
+    .tab-btn{ background:#e5e7eb; color:#374151; border:1px solid #d1d5db; border-bottom:none; border-radius:10px 10px 0 0; padding:6px 12px; font-weight:700; box-shadow:none; cursor:pointer; }
+    .tab-btn:hover{ filter:brightness(1.03); }
+    .tab-btn.active{ background:#fff; color:#111827; border-color:#d1d5db; position:relative; top:1px; }
+    .tab-panel{ background:#fff; border:1px solid #d1d5db; border-radius:0 12px 12px 12px; padding:12px; margin-top:0; }
+    .tab-panel[hidden]{ display:none; }
+    /* Strategic Summary cards */
+    .card-grid{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+    .card-col-1{ grid-template-columns: 1fr; }
+    .card{ background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:10px 12px; color:var(--text); box-shadow: var(--shadow); }
+    /* Box header reused in cards */
+    .box-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:8px; border-bottom:1px dashed #e2e8f0; margin-bottom:8px; }
+    .box-title{ font-size:16px; font-weight:700; color: var(--text); display:flex; align-items:center; gap:8px; }
+    .remove{ background:none; color:var(--text); border:1px solid #cbd5e1; border-radius:10px; padding:6px 9px; font-weight:800; line-height:1; box-shadow:none; cursor:pointer; }
+    .remove:hover{ background:#f1f5f9; }
+    .remove.danger{ border-color:var(--danger); color:#991b1b; }
+    /* Checkbox grid for association dialogs */
+    .checkbox-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:8px; }
+    .checkbox-grid label{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
+    /* Driver goal chips */
+    .goal-list{ display:grid; grid-template-columns: 1fr; gap:8px; margin-top:4px; }
+    .goal-list-2col{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; margin-top:4px; }
+    .goal-chip{ display:flex; flex-direction:column; align-items:center; justify-content:center; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; width:100%; text-align:center; }
+    .goal-chip .name{ font-weight:400; color: var(--text); }
+    .goal-chip .kind{ color: var(--muted); font-weight:400; font-size:12px; width:100%; display:flex; align-items:center; justify-content:space-between; }
+    .goal-chip .kind .icon{ display:inline-block; }
+    .goal-chip .kind .label{ display:inline-block; }
+    /* Dialog styling */
+    dialog::backdrop{ background: rgba(15,23,42,.38); backdrop-filter: blur(2px); }
+    dialog{ border:1px solid #e2e8f0; background: linear-gradient(180deg,#fff 0%, #f8fafc 100%); color:var(--text); border-radius:16px; padding:0; box-shadow:0 30px 80px rgba(2,8,23,.24); width:min(720px,96vw); animation: modal-pop .16s ease-out; }
+    @keyframes modal-pop{ from{ opacity:0; transform: translateY(8px) scale(.98);} to{opacity:1; transform: translateY(0) scale(1);} }
+    .modal-header{ padding:14px 16px; border-bottom:1px solid #e5e7eb; font-weight:700; background:linear-gradient(180deg,#fff,#f7fafc); border-radius: 16px 16px 0 0; }
+    .modal-body{ padding:14px 16px; }
+    .modal-actions{ display:flex; justify-content:flex-end; gap:10px; padding:12px 16px; border-top:1px solid #e5e7eb; background:#fbfdff; border-radius:0 0 16px 16px; }
+    .field{ display:grid; gap:6px; margin-bottom:10px; }
+    input[type="text"], textarea, select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; background:#fff; color:var(--text); font-family:inherit; font-size:14px; transition:border-color .15s ease, box-shadow .15s ease; }
+    textarea{ min-height:220px; }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(6,182,212,.2); }
+    .muted{ color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Strategic Summary Editor</h1>
+    </header>
+
+    <div class="actions global-actions" id="globalActions">
+      <!-- HTML-only actions; JS wiring to be added later -->
+      <button id="importBtn" class="btn-secondary" title="Import JSON">Import JSON</button>
+      <button id="exportBtn" class="btn-secondary" title="Export structure as JSON">Export JSON</button>
+      <button id="createDupBtn" class="btn-secondary" title="Create DUP">Create DUP</button>
+      <button id="clearAllBtn" class="btn-secondary" title="Clear everything">Clear all</button>
+    </div>
+
+    <!-- Metrics row: 1 row, 3 columns -->
+    <div class="metrics-row" style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:16px;">
+      <!-- Box 1: Drivers -->
+      <div class="box">
+        <div class="box-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:1px dashed #e2e8f0;margin-bottom:8px;">
+          <div class="box-title" style="font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true">⛟</span>
+            <span>Drivers</span>
+          </div>
+          <div class="actions"><button id="addDriverBtn" class="btn-secondary addBtn" type="button" title="Add Drivers">+ Add</button></div>
+        </div>
+        <div class="metric-count" id="driversCount" aria-label="Drivers count" style="flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:42px;line-height:1;text-align:center;">0</div>
+      </div>
+      <!-- Box 2: Goals -->
+      <div class="box">
+        <div class="box-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:1px dashed #e2e8f0;margin-bottom:8px;">
+          <div class="box-title" style="font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true">✈</span>
+            <span>Goals</span>
+          </div>
+          <div class="actions"><button id="addGoalBtn" class="btn-secondary addBtn" type="button" title="Add Goals">+ Add</button></div>
+        </div>
+        <div class="metric-count" id="goalsCount" aria-label="Goals count" style="flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:42px;line-height:1;text-align:center;">0</div>
+      </div>
+      <!-- Box 3: Objectives -->
+      <div class="box">
+        <div class="box-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:8px;border-bottom:1px dashed #e2e8f0;margin-bottom:8px;">
+          <div class="box-title" style="font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true">✓</span>
+            <span>Objectives</span>
+          </div>
+          <div class="actions"><button id="addObjectiveBtn" class="btn-secondary addBtn" type="button" title="Add Objectives">+ Add</button></div>
+        </div>
+        <div class="metric-count" id="objectivesCount" aria-label="Objectives count" style="flex:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:42px;line-height:1;text-align:center;">0</div>
+      </div>
+    </div>
+
+        <!-- Tabs -->
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-target="tab-strategic-summary">Drivers</button>
+      <button class="tab-btn" data-target="tab-goals">Goals</button>
+      <button class="tab-btn" data-target="tab-objectives">Objectives</button>
+      <button class="tab-btn" data-target="tab-strategic-plans">Strategic Plans</button>
+    </div>
+    <div id="tab-strategic-summary" class="tab-panel">
+      <!-- Strategic Summary content -->
+      <section aria-labelledby="driversSectionTitle">
+        <div id="driversList" class="card-grid"></div>
+      </section>
+    </div>
+    <div id="tab-goals" class="tab-panel" hidden>
+      <!-- Goals content -->
+      <section aria-labelledby="goalsSectionTitle">
+        <div id="goalsList" class="card-grid card-col-1"></div>
+      </section>
+    </div>
+    <div id="tab-objectives" class="tab-panel" hidden>
+      <!-- Objectives content -->
+      <section aria-labelledby="objectivesSectionTitle">
+        <div class="actions" style="justify-content:flex-end; margin-bottom:8px;">
+          <input id="objectivesSearch" type="text" placeholder="Search objectives" style="border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;min-width:220px;" />
+        </div>
+        <div id="objectivesList" class="card-grid card-col-1"></div>
+      </section>
+    </div>
+    <div id="tab-strategic-plans" class="tab-panel" hidden>
+      <!-- Strategic Plans content -->
+      <section aria-labelledby="strategicPlansSectionTitle">
+        <div class="actions" style="justify-content:flex-end; margin-bottom:8px;">
+          <button id="addStrategicPlanBtn" class="btn-secondary" type="button" title="Add Strategic Plan">Add Strategic Plan</button>
+        </div>
+      
+        <div class="actions" style="justify-content:flex-end; margin-bottom:8px;">
+          <input id="strategicPlansSearch" type="text" placeholder="Search strategic plans" style="border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;min-width:220px;" />
+        </div>
+        <div id="strategicPlansList" class="card-grid card-col-1"></div>
+      </section>
+    </div>
+    <!-- Export JSON dialog -->
+    <dialog id="exportModal" aria-labelledby="exportModalTitle">
+      <div class="modal-header" id="exportModalTitle">Export JSON</div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="exportTextarea">Generated structure</label>
+          <textarea id="exportTextarea" readonly></textarea>
+          <div class="muted">Copy the content to save as a .json file.</div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="copyBtn" class="btn-secondary" type="button">Copy</button>
+        <button id="closeExportBtn">Close</button>
+      </div>
+    </dialog>
+    <!-- Assets required to generate Essential .dup -->
+    <script type="application/json" id="python-code-b64">IyAKIyAgICAgICogQ29weXJpZ2h0IChjKTIwMDgtMjAxNyBFbnRlcnByaXNlIEFyY2hpdGVjdHVyZSBTb2x1dGlvbnMgbHRkLgojICAgICAgKiBUaGlzIGZpbGUgaXMgcGFydCBvZiBFc3NlbnRpYWwgQXJjaGl0ZWN0dXJlIE1hbmFnZXIsIAojICAgICAgKiB0aGUgRXNzZW50aWFsIEFyY2hpdGVjdHVyZSBNZXRhIE1vZGVsIGFuZCBUaGUgRXNzZW50aWFsIFByb2plY3QuCiMgICAgICAqCiMgICAgICAqIEVzc2VudGlhbCBBcmNoaXRlY3R1cmUgTWFuYWdlciBpcyBmcmVlIHNvZnR3YXJlOiB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBhbmQvb3IgbW9kaWZ5CiMgICAgICAqIGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMgcHVibGlzaGVkIGJ5CiMgICAgICAqIHRoZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRpb24sIGVpdGhlciB2ZXJzaW9uIDMgb2YgdGhlIExpY2Vuc2UsIG9yCiMgICAgICAqIChhdCB5b3VyIG9wdGlvbikgYW55IGxhdGVyIHZlcnNpb24uCiMgICAgICAqCiMgICAgICAqIEVzc2VudGlhbCBBcmNoaXRlY3R1cmUgTWFuYWdlciBpcyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNlZnVsLAojICAgICAgKiBNRVJDSEFOVEFCSUxJVFkgb3IgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UuICBTZWUgdGhlCiMgICAgICAqIGJ1dCBXSVRIT1VUIEFOWSBXQVJSQU5UWTsgd2l0aG91dCBldmVuIHRoZSBpbXBsaWVkIHdhcnJhbnR5IG9mCiMgICAgICAqIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGZvciBtb3JlIGRldGFpbHMuCiMgICAgICAqCiMgICAgICAqIFlvdSBzaG91bGQgaGF2ZSByZWNlaXZlZCBhIGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlCiMgICAgICAqIGFsb25nIHdpdGggRXNzZW50aWFsIEFyY2hpdGVjdHVyZSBNYW5hZ2VyLiAgSWYgbm90LCBzZWUgPGh0dHA6Ly93d3cuZ251Lm9yZy9saWNlbnNlcy8+LgojICAgICAgKiAKIyAgICAgICAKIyAxOS4wMi4yMDA4CUpXQyB2MS4wCiMgMjAuMDUuMjAwOAlKV0MgdjEuMAojIDIyLjA1LjIwMDgJSldDIHYxLjAgcmVsZWFzZWQgQ3JlYXRlIG9yIFVwZGF0ZSBpbnN0YW5jZXMgYW5kIEF0dHJpYnV0ZXMKIyAxNS4wNy4yMDA4CUpXQyB2MS4xIEFkZGVkIG5ldyBmdW5jdGlvbnMgZm9yIGZpbmRpbmcgaW5zdGFuY2VzIGJ5IG5hbWUgaW4gRXNzZW50aWFsLgojIDE3LjA3LjIwMDgJSldDCXYxLjEuMSBmaXhlZCBtYXRjaGluZyBpc3N1ZSBpbiBnZXRFc3NlbnRpYWxJbnN0YW5jZUNvbnRhaW5zSWdub3JlQ2FzZSgpCiMgMTEuMDguMjAwOAlKV0MJdjEuMiBBZGRlZCBuZXcgZnVuY3Rpb25zICgyKSB0byBtYXRjaCBpbnN0YW5jZSBuYW1lcyBtb3JlIGFjY3VyYXRlbHkKIyAwNC4wOS4yMDA4CUpXQwl2MS4yLjEgVXBkYXRlZCBhZGRJZk5vdFRoZXJlKCkgZnVuY3Rpb24gdG8gZW5zdXJlIG11bHRpcGxlIHZhbHVlcyBhcmUgbm90IAojCQkJCQkJIGFkZGVkIHRvIHNpbmdsZS1jYXJkaW5hbGl0eSBzbG90cy4gQWRkZWQgc2V0U2xvdCgpIGZ1bmN0aW9uIHRvIGVuYWJsZSB0aGlzCiMgMjAuMDMuMjAwOQlKV0MJdjEuMyBBZGRlZCBzdXBwb3J0IGZvciBpbXBvcnRpbmcgLyBzeW5jaHJvbmlzaW5nIEVBX1JlbGF0aW9uIGFuZCA6RUFfR3JhcGhfUmVsYXRpb24gaW5zdGFuY2VzCiMgMjAuMDMuMjAwOQlKV0MJdjEuMy4xIEZpeGVkIHRoZSBoYW5kbGluZyBvZiB0aGUgMyBuYW1lIHNsb3QgdmFyaWFudHMKIyAyMC4wOS4yMDExICAgIEpXQyB2MS40IEhhbmRsZSBncmFwaCByZWxhdGlvbnMgdGhhdCBoYXZlIG5vIDpyZWxhdGlvbl9uYW1lIHZhbHVlIGluIHRoZSBzb3VyY2UuCiMgMDQuMTAuMjAxMSAgICBKV0MgdjEuNSBNaWdyYXRlZCB0byAucHksIGhhbmRsZSBub24tZXhpc3RlbnQgc2xvdHMuCiMgMzEuMTAuMjAxMSAgICBKV0MgdjEuNiBNb3ZlZCBndWFyZCBjb2RlIHRvIGFkZElmTm90VGhlcmUoKSBhbmQgc2V0U2xvdCgpIHRvIGF2b2lkIG51bGwgaW5zdGFuY2UuCiMgMjguMDkuMjAxMiAgICBKV0MgdjEuNyBDaGFuZ2VkIHRoZSBwcm9ncmVzcyBwcmludGluZyB0byByZW1vdmUgbmFtZXMgLyBleHRlcm5hbCByZWZlcmVuY2VzIHVzZWQgdG8gc3VwcG9ydCBVbmljb2RlLgojIDE5LjExLjIwMTIgICAgSldDIHYxLjggQWRkZWQgbmV3IEluc3RhbmNlIGNyZWF0aW5nIGFuZCBnZXR0aW5nIGZ1bmN0aW9ucy4KIyAyMS4xMS4yMDEyICAgIEpXQyB2MS45IEFkZGVkIHRoZSBFc3NlbnRpYWxHZXRJbnN0YW5jZSgpIGZ1bmN0aW9uIHRvIGludGVsbGlnZW50bHkgZmluZCB0aGUgY29ycmVjdCBpbnN0YW5jZQojIDEyLjEyLjIwMTIgICAgSldDIHYxLjEwIEFkZGVkIHRoZSBHZXRBY3RvclRvUm9sZSgpIGZ1bmN0aW9uCiMgMDQuMDQuMjAxNCAgICBKV0MgdjEuMTEgQWRkZWQgZnVuY3Rpb25zIHRvIHNldCBzbG90cyB0aGF0IHRha2UgQ2xhc3MgYW5kIFNsb3QgaW5zdGFuY2VzLiBBbHNvIGRlbGV0ZSAvIHJlbW92ZSBmdW5jdGlvbnMuCiMgMDkuMDUuMjAxNCAgICBKV0MgdjEuMTIgQWRkaXRpb25hbCBmdW5jdGlvbnMgdG8gc3VwcG9ydCB0aGUgZGVsZXRlIC8gcmVtb3ZlIG9wZXJhdGlvbnMgb2YgdGhlIEltcG9ydCBVdGlsaXR5CiMgMTYuMDUuMjAxNCAgICBKV0MgdjEuMTMgUmV3b3JrZWQgRXNzZW50aWFsRGVsZXRlSW5zdGFuY2UgdG8gZmlsdGVyIGJ5IHNsb3RzIHRoYXQgaGF2ZSBjb250ZW50cyAvIHZhbHVlcwojIDMxLjA1LjIwMTcgICAgSldDIHYxLjE0IE5ldyBmdW5jdGlvbnMgdG8gaGFuZGxlIGltcG9ydHMgb2YgQ2xhc3Nlcy4KIyAyNy4wNy4yMDE3ICAgIEpXQyB2Mi4wIFJldmlzZWQgYXBwcm9hY2ggdG8gZmluZGluZyBpbnN0YW5jZXMgb2YgQ2xhc3Nlcy4KIyAyNi4wMi4yMDIwICAgIEpXQyB2Mi4xIFVzZSBvZiB0aGUgbmV3IHJlZmVyZW5jZWRfaW5zdGFuY2Ugc2xvdCBmb3IgZXh0ZXJuYWwgcmVmZXJlbmNlcwojIDI3LjAyLjIwMjAgICAgSldDIHYyLjIuMSBCZXR0ZXIgcGVyZm9ybWFuY2UgdXBkYXRlIGFuZCBkcm9wIHRoZSBnZXRSZWZlcmVuY2VkSW5zdGFuY2UoKQojIAojIEVzc2VudGlhbCh0bSkgQXJjaGl0ZWN0dXJlIE1hbmFnZXIKIyBTdGFuZGFyZCBzZXQgb2YgZnVuY3Rpb25zIHRvIGJlIHVzZWQgYnkgdGhlIGludGVncmF0aW9uL2ltcG9ydCBzY3JpcHRzCiMKCmZyb20gamF2YS51dGlsIGltcG9ydCBEYXRlCmZyb20gamF2YS50ZXh0IGltcG9ydCBEYXRlRm9ybWF0CmZyb20gZWR1LnN0YW5mb3JkLnNtaS5wcm90ZWdlLm1vZGVsIGltcG9ydCBWYWx1ZVR5cGUKCiMgR2V0IGEgcmVmZXJlbmNlIHRvIHRoZSBpbnN0YW5jZSBvZiB0aGUgc3BlY2lmaWVkIGNsYXNzIHRoYXQgaGFzIHRoZSBzcGVjaWZpZWQgZXh0ZXJuYWwgcmVmZXJlbmNlIGluIHRoZQojIHNwZWNpZmllZCBleHRlcm5hbCByZXBvc2l0b3J5LiBJZiBzdWNoIGFuIGluc3RhbmNlIGNhbm5vdCBiZSBmb3VuZCwgY3JlYXRlIG9uZSB3aXRoIHRoZSBzcGVjaWZpZWQgCiMgbmFtZSAocmVhbCBuYW1lLCBub3QgaW5zdGFuY2UgbmFtZSkKIyB0aGVDbGFzc05hbWUgLSB0aGUgbmFtZSBvZiB0aGUgRXNzZW50aWFsIG1ldGEgY2xhc3MKIyB0aGVFeHRlcm5hbFJlZiAtIHRoZSB1bmlxdWUgcmVmZXJlbmNlL2luc3RhbmNlIElEIG9mIHRoZSBlbGVtZW50IGluIHRoZSBleHRlcm5hbCByZXBvc2l0b3J5CiMgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5IC0gdGhlIG5hbWUgb2YgdGhlIGV4dGVybmFsIHJlcG9zaXRvcnkKIyB0aGVJbnN0YW5jZU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgaW5zdGFuY2UgdGhhdCBpcyBiZWluZyBjcmVhdGVkL3VwZGF0ZWQgaW4gdGhlIGludGVncmF0aW9uCmRlZiBnZXRFc3NlbnRpYWxJbnN0YW5jZSh0aGVDbGFzc05hbWUsIHRoZUV4dGVybmFsUmVmLCB0aGVFeHRlcm5hbFJlcG9zaXRvcnksIHRoZUluc3RhbmNlTmFtZSk6Cglhbkluc3RMaXN0ID0ga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkuZ2V0RGlyZWN0SW5zdGFuY2VzKCkKCWZvciBhbkluc3QgaW4gYW5JbnN0TGlzdDoKCQlhbkV4dGVybmFsUmVmTGlzdCA9IGFuSW5zdC5nZXREaXJlY3RPd25TbG90VmFsdWVzKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfaW5zdGFuY2VfcmVmZXJlbmNlIikpCgkJaWYgYW5FeHRlcm5hbFJlZkxpc3QgIT0gTm9uZToKCQkJYW5FeHRlcm5hbFJlZiA9IGdldEV4dGVybmFsUmVmSW5zdChhbkV4dGVybmFsUmVmTGlzdCwgZ2V0RXh0ZXJuYWxSZXBvc2l0b3J5KHRoZUV4dGVybmFsUmVwb3NpdG9yeSkpCgkJCWlmIGFuRXh0ZXJuYWxSZWYgIT0gTm9uZToKCQkJCWFuRXh0ZXJuYWxJRCA9IGFuRXh0ZXJuYWxSZWYuZ2V0RGlyZWN0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX2luc3RhbmNlX3JlZmVyZW5jZSIpKQoJCQkJaWYoYW5FeHRlcm5hbElEID09IHRoZUV4dGVybmFsUmVmKToKCQkJCQlhbkV4dGVybmFsUmVmLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF91cGRhdGVfZGF0ZSIpLCB0aW1lc3RhbXAoKSkKCQkJCQlwcmludCAiVXBkYXRlZCBpbnN0YW5jZSB2aWEgbmFtZSBtYXRjaCwgb24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKCQkJCQlyZXR1cm4gYW5JbnN0CgkjIGlmIHdlJ3JlIGhlcmUsIHdlIGhhdmVuJ3QgZm91bmQgb25lLCBzbyBjcmVhdGUgb25lCglhTmV3SW5zdCA9IGtiLmNyZWF0ZUluc3RhbmNlKE5vbmUsIGtiLmdldENscyh0aGVDbGFzc05hbWUpKQoJYW5FeHRlcm5hbFJlZiA9IGNyZWF0ZUV4dGVybmFsUmVmSW5zdCh0aGVFeHRlcm5hbFJlcG9zaXRvcnksIHRoZUV4dGVybmFsUmVmKQoJCgkjIEhhbmRsZSB0aGUgMyB2YXJpYW50cyBvZiBuYW1lCglhTmFtZVNsb3QgPSBnZXROYW1lU2xvdChhTmV3SW5zdCkKCWFOZXdJbnN0LnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KGFOYW1lU2xvdCksIHRoZUluc3RhbmNlTmFtZSkJCglhTmV3SW5zdC5hZGRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSwgYW5FeHRlcm5hbFJlZikKCXByaW50ICJDcmVhdGVkIG5ldyBpbnN0YW5jZSBvZiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQoJcmV0dXJuIGFOZXdJbnN0CgojIFJldHVybiB0aGUgZXh0ZXJuYWwgcmVmZXJlbmNlIHRoYXQgYXBwbGllZCB0byB0aGUgc3BlY2lmaWVkIEV4dGVybmFsIFJlcG9zaXRvcnkgZnJvbSBhIGxpc3QgCiMgb2YgZXh0ZXJuYWwgcmVmZXJlbmNlcyBmcm9tIGFuIEVzc2VudGlhbCBpbnN0YW5jZS4KIyB0aGVFeHRlcm5hbFJlZkxpc3QgLSB0aGUgbGlzdCBvZiBleHRlcm5hbCByZWZlcmVuY2UgcmVjb3JkcyBmb3IgYW4gRXNzZW50aWFsSW5zdGFuY2UKIyB0aGVFeHRlcm5hbFJlcG9zaXRvcnkgLSB0aGUgaW5zdGFuY2Ugb2YgdGhlIGV4dGVybmFsIHJlcG9zaXRvcnkJCmRlZiBnZXRFeHRlcm5hbFJlZkluc3QodGhlRXh0ZXJuYWxSZWZMaXN0LCB0aGVFeHRlcm5hbFJlcG9zaXRvcnkpOgogICAgIyBTZWFyY2ggdGhlIGxpc3QgbG9va2luZyBmb3IgdGhlIGVudHJ5IGFib3V0IHRoZSBzcGVjaWZpZWQgRXh0ZXJuYWwgUmVwb3NpdG9yeQogICAgYVJlZiA9IGZpbHRlcihsYW1iZGEgeDogeC5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9yZWZlcmVuY2UiKSkgPT0gdGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVFeHRlcm5hbFJlZkxpc3QpCQogICAgcmV0dXJuIGFSZWZbMF0KCiMgQ3JlYXRlIGEgbmV3IEV4dGVybmFsIFJlZmVyZW5jZSByZWNvcmQgdG8gYmUgYXNzb2NpYXRlZCB3aXRoIGFuIEVzc2VudGlhbCBpbnN0YW5jZS4KIyB0aGVFeHRlcm5hbFJlcG9zaXRvcnkgLSB0aGUgbmFtZSAoYSBTdHJpbmcpIG9mIHRoZSBleHRlcm5hbCByZXBvc2l0b3J5CiMgdGhlRXh0ZXJuYWxSZWZlcmVuY2UgLSB0aGUgcmVmZXJlbmNlIElEIHRoYXQgaXMgdXNlZCBpbiB0aGUgc3BlY2lmaWVkIGV4dGVybmFsIHJlcG9zaXRvcnkKZGVmIGNyZWF0ZUV4dGVybmFsUmVmSW5zdCh0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lLCB0aGVFeHRlcm5hbFJlZmVyZW5jZSk6CglhTmV3RXh0ZXJuYWxSZWYgPSBrYi5jcmVhdGVJbnN0YW5jZShOb25lLCBrYi5nZXRDbHMoIkV4dGVybmFsX0luc3RhbmNlX1JlZmVyZW5jZSIpKQoJYU5ld0V4dGVybmFsUmVmLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIiksIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUgKyAiOjoiICsgdGhlRXh0ZXJuYWxSZWZlcmVuY2UpCglhTmV3RXh0ZXJuYWxSZWYuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfcmVmZXJlbmNlIiksIGdldEV4dGVybmFsUmVwb3NpdG9yeSh0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lKSkKCWFOZXdFeHRlcm5hbFJlZi5zZXRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfaW5zdGFuY2VfcmVmZXJlbmNlIiksIHRoZUV4dGVybmFsUmVmZXJlbmNlKQoJYU5ld0V4dGVybmFsUmVmLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF91cGRhdGVfZGF0ZSIpLCB0aW1lc3RhbXAoKSkKCXJldHVybiBhTmV3RXh0ZXJuYWxSZWYKCiMgR2V0IGEgcmVmZXJlbmNlIHRvIHRoZSBpbnN0YW5jZSBvZiBFeHRlcm5hbF9SZXBvc2l0b3J5IHRoYXQgaGFzIHRoZSBzcGVjaWZpZWQgbmFtZQojIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgZXh0ZXJuYWwgcmVwb3NpdG9yeQpkZWYgZ2V0RXh0ZXJuYWxSZXBvc2l0b3J5KHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUpOgogICAgYW5FeHRSZXBvcyA9IEdldEluc3RhbmNlT2ZDbGFzcygiRXh0ZXJuYWxfUmVwb3NpdG9yeSIsIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUpCiAgICBpZiBhbkV4dFJlcG9zICE9IE5vbmU6CiAgICAgICAgcmV0dXJuIGFuRXh0UmVwb3MKICAgICAgICAKICAgICMgcmVwb3J0IGVycm9yIGlmIG5vdCBmb3VuZAogICAgcHJpbnQgIlJlcG9zaXRvcnk6ICIgKyB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lICsgIiBub3QgZGVmaW5lZCBhcyBhbiBleHRlcm5hbCByZXBvc2l0b3J5IGZvciBpbnRlZ3JhdGlvbiBpbiB0aGlzIEVzc2VudGlhbEFNIG1vZGVsIgoJCQkKIyBSZXR1cm4gYSBzdHJpbmcgb2YgdGhlIGN1cnJlbnQgZGF0ZS90aW1lIHRvIGJlIHVzZWQgZm9yIHRpbWVzdGFtcGluZy4KZGVmIHRpbWVzdGFtcCgpOgoJcmV0dXJuIERhdGVGb3JtYXQuZ2V0RGF0ZVRpbWVJbnN0YW5jZSgpLmZvcm1hdChEYXRlKCkpCgkKIyBVcGRhdGUgdGhlIG5hbWVkIGF0dHJpYnV0ZSBhc3NvY2lhdGVkIHdpdGggdGhlIHNwZWNpZmllZCB0ZWNobm9sb2d5IGluc3RhbmNlIG9iamVjdAojIG9yIGNyZWF0ZSBpdCBpZiBpdCdzIG5vdCBhbHJlYWR5IGJlZW4gZGVmaW5lZApkZWYgc2V0T3JVcGRhdGVUZWNoSW5zdEF0dHJpYnV0ZUJ5TmFtZSh0aGVBdHRyaWJ1dGVOYW1lLCB0aGVBdHRyaWJ1dGVWYWx1ZSwgdGhlSW5zdGFuY2UpOgoJYW5BdHRyaWJ1dGVMaXN0ID0ga2IuZ2V0Q2xzKCJBdHRyaWJ1dGUiKS5nZXREaXJlY3RJbnN0YW5jZXMoKQoJYUZvdW5kQXR0cmlidXRlID0gTm9uZQoJZm9yIGFuQXR0cmlidXRlIGluIGFuQXR0cmlidXRlTGlzdDoKCQlpZihhbkF0dHJpYnV0ZS5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgibmFtZSIpKSA9PSB0aGVBdHRyaWJ1dGVOYW1lKToKCQkJYUZvdW5kQXR0cmlidXRlID0gYW5BdHRyaWJ1dGUKCWFuQXR0cmlidXRlVmFsTGlzdCA9IHRoZUluc3RhbmNlLmdldERpcmVjdE93blNsb3RWYWx1ZXMoa2IuZ2V0U2xvdCgidGVjaG5vbG9neV9pbnN0YW5jZV9hdHRyaWJ1dGVzIikpCglmb3IgYW5BdHRyaWJ1dGVWYWwgaW4gYW5BdHRyaWJ1dGVWYWxMaXN0OgoJCWlmKGFuQXR0cmlidXRlVmFsLmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJhdHRyaWJ1dGVfdmFsdWVfb2YiKSkgPT0gYUZvdW5kQXR0cmlidXRlKToKCQkJYW5BdHRyaWJ1dGVWYWwuc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImF0dHJpYnV0ZV92YWx1ZSIpLCB0aGVBdHRyaWJ1dGVWYWx1ZSkKCQkJYW5BdHRyaWJ1dGVWYWwuc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoIm5hbWUiKSwgdGhlQXR0cmlidXRlTmFtZSArICIgPSAiICsgdGhlQXR0cmlidXRlVmFsdWUpCgkJCXJldHVybgoJIyBFbHNlIHRoaXMgaW5zdGFuY2UgaGFzIG5vIGF0dHJpYnV0ZSB2YWx1ZSBkZWZpbmVkIGZvciB0aGlzIGF0dHJpYnV0ZQoJYU5ld0FWID0ga2IuY3JlYXRlSW5zdGFuY2UoTm9uZSwga2IuZ2V0Q2xzKCJBdHRyaWJ1dGVfVmFsdWUiKSkKCWFOZXdBVi5hZGRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiYXR0cmlidXRlX3ZhbHVlX29mIiksIGFGb3VuZEF0dHJpYnV0ZSkKCWFOZXdBVi5zZXRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiYXR0cmlidXRlX3ZhbHVlIiksIHRoZUF0dHJpYnV0ZVZhbHVlKQoJYU5ld0FWLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIiksIHRoZUF0dHJpYnV0ZU5hbWUgKyAiID0gIiArIHRoZUF0dHJpYnV0ZVZhbHVlKQoJdGhlSW5zdGFuY2UuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QoInRlY2hub2xvZ3lfaW5zdGFuY2VfYXR0cmlidXRlcyIpLCBhTmV3QVYpCgkJCiMgVXBkYXRlIHRoZSBuYW1lZCBhdHRyaWJ1dGUgYXNzb2NpYXRlZCB3aXRoIHRoZSBzcGVjaWZpZWQgdGVjaG5vbG9neSBOb2RlICh0aGVJbnN0YW5jZSkgb2JqZWN0CiMgb3IgY3JlYXRlIGl0IGlmIGl0J3Mgbm90IGFscmVhZHkgYmVlbiBkZWZpbmVkCmRlZiBzZXRPclVwZGF0ZVRlY2hOb2RlQXR0cmlidXRlQnlOYW1lKHRoZUF0dHJpYnV0ZU5hbWUsIHRoZUF0dHJpYnV0ZVZhbHVlLCB0aGVJbnN0YW5jZSk6CglhbkF0dHJpYnV0ZUxpc3QgPSBrYi5nZXRDbHMoIkF0dHJpYnV0ZSIpLmdldERpcmVjdEluc3RhbmNlcygpCglhRm91bmRBdHRyaWJ1dGUgPSBOb25lCglmb3IgYW5BdHRyaWJ1dGUgaW4gYW5BdHRyaWJ1dGVMaXN0OgoJCWlmKGFuQXR0cmlidXRlLmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIikpID09IHRoZUF0dHJpYnV0ZU5hbWUpOgoJCQlhRm91bmRBdHRyaWJ1dGUgPSBhbkF0dHJpYnV0ZQoJYW5BdHRyaWJ1dGVWYWxMaXN0ID0gdGhlSW5zdGFuY2UuZ2V0RGlyZWN0T3duU2xvdFZhbHVlcyhrYi5nZXRTbG90KCJ0ZWNobm9sb2d5X25vZGVfYXR0cmlidXRlcyIpKQoJZm9yIGFuQXR0cmlidXRlVmFsIGluIGFuQXR0cmlidXRlVmFsTGlzdDoKCQlpZihhbkF0dHJpYnV0ZVZhbC5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiYXR0cmlidXRlX3ZhbHVlX29mIikpID09IGFGb3VuZEF0dHJpYnV0ZSk6CgkJCWFuQXR0cmlidXRlVmFsLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJhdHRyaWJ1dGVfdmFsdWUiKSwgdGhlQXR0cmlidXRlVmFsdWUpCgkJCWFuQXR0cmlidXRlVmFsLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIiksIHRoZUF0dHJpYnV0ZU5hbWUgKyAiID0gIiArIHRoZUF0dHJpYnV0ZVZhbHVlKQoJCQlyZXR1cm4KCSMgRWxzZSB0aGlzIGluc3RhbmNlIGhhcyBubyBhdHRyaWJ1dGUgdmFsdWUgZGVmaW5lZCBmb3IgdGhpcyBhdHRyaWJ1dGUKCWFOZXdBViA9IGtiLmNyZWF0ZUluc3RhbmNlKE5vbmUsIGtiLmdldENscygiQXR0cmlidXRlX1ZhbHVlIikpCglhTmV3QVYuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImF0dHJpYnV0ZV92YWx1ZV9vZiIpLCBhRm91bmRBdHRyaWJ1dGUpCglhTmV3QVYuc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImF0dHJpYnV0ZV92YWx1ZSIpLCB0aGVBdHRyaWJ1dGVWYWx1ZSkKCWFOZXdBVi5zZXRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgibmFtZSIpLCB0aGVBdHRyaWJ1dGVOYW1lICsgIiA9ICIgKyB0aGVBdHRyaWJ1dGVWYWx1ZSkKCXRoZUluc3RhbmNlLmFkZE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJ0ZWNobm9sb2d5X25vZGVfYXR0cmlidXRlcyIpLCBhTmV3QVYpCgojIFNldCBhIHNsb3QgdmFsdWUgdG8gdGhlIHNwZWNpZmllZCB2YWx1ZS4gVG8gYmUgdXNlZCB3aXRoIHNpbmdsZS1jYXJkaW5hbGl0eSBzbG90cwojIG9ubHkKIyB0aGVJbnN0YW5jZSAtIHRoZSBpbnN0YW5jZSB0byB3aGljaCB3ZSB3aXNoIHRvIHNldCB0aGUgc2xvdCB0byBjb250YWluIHRoZUluc3RhbmNlVG9BZGQKIyB0aGVTbG90TmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBzbG90IG9uIHRoZUluc3RhbmNlCiMgdGhlSW5zdGFuY2VUb0FkZCAtIHRoZSBpbnN0YW5jZSB0byBzZXQgaW4gdGhlU2xvdE5hbWUgc2xvdCBvbiB0aGVJbnN0YW5jZQojIDA0LjEwLjIwMTEgSldDIC0gY2hlY2sgdGhhdCBzbG90IGV4aXN0cyBmaXJzdAojIDMxLjEwLjIwMTEgSldDIC0gR3VhcmQgY29kZSwgQ2hlY2sgdGhlSW5zdGFuY2UgIT0gTm9uZQpkZWYgc2V0U2xvdCh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUsIHRoZUluc3RhbmNlVG9BZGQpOgogICAgaWYgdGhlSW5zdGFuY2UgPT0gTm9uZToKICAgICAgICByZXR1cm4KICAgIGFTbG90ID0ga2IuZ2V0U2xvdCh0aGVTbG90TmFtZSkKICAgIGlmIGFTbG90ICE9IE5vbmU6CiAgICAgICAgdGhlSW5zdGFuY2Uuc2V0T3duU2xvdFZhbHVlKGFTbG90LCB0aGVJbnN0YW5jZVRvQWRkKQogICAgZWxzZToKICAgICAgICBwcmludCAiV0FSTklORzogQXR0ZW1wdCB0byBzZXQgbm9uLWV4aXN0ZW50IHNsb3Q6ICIgKyB0aGVTbG90TmFtZQoKIyBBZGQgdGhlIHNsb3QgdmFsdWUgdG8gdGhlIHNwZWNpZmllZCBpbnN0YW5jZSBvbmx5IGlmIGl0J3Mgbm90IGFscmVhZHkgdGhlcmUuCiMgdGhlSW5zdGFuY2UgLSB0aGUgaW5zdGFuY2UgdG8gd2hpY2ggd2Ugd2lzaCB0byBhZGQgdGhlSW5zdGFuY2VUb0FkZAojIHRoZVNsb3ROYW1lIC0gdGhlIG5hbWUgb2YgdGhlIHNsb3Qgb24gdGhlSW5zdGFuY2UKIyB0aGVJbnN0YW5jZVRvQWRkIC0gdGhlIGluc3RhbmNlIHRvIGFkZCB0byB0aGVTbG90TmFtZSBzbG90IG9uIHRoZUluc3RhbmNlCiMgdjEuMi4xOiBJZiB0aGVTbG90TmFtZSBpcyBhIHNpbmdsZSBjYXJkaW5hbGl0eSBzbG90LCB1c2Ugc2V0U2xvdCgpCiMgMDQuMTAuMjAxMSBKV0MgLSBjaGVjayB0aGF0IHRoZSBzbG90IGV4aXN0cyBmaXJzdAojIDMxLjEwLjIwMTEgSldDIC0gR3VhcmQgY29kZSwgQ2hlY2sgdGhlSW5zdGFuY2UgIT0gTm9uZQpkZWYgYWRkSWZOb3RUaGVyZSh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUsIHRoZUluc3RhbmNlVG9BZGQpOgogICAgaWYgdGhlSW5zdGFuY2UgPT0gTm9uZToKICAgICAgICByZXR1cm4KICAgIGFTbG90ID0ga2IuZ2V0U2xvdCh0aGVTbG90TmFtZSkKICAgIGlmIGFTbG90ICE9IE5vbmU6CiAgICAgICAgaWYgYVNsb3QuZ2V0QWxsb3dzTXVsdGlwbGVWYWx1ZXMoKToKICAgICAgICAgICAgYW5JbnN0TGlzdCA9IHRoZUluc3RhbmNlLmdldERpcmVjdE93blNsb3RWYWx1ZXMoa2IuZ2V0U2xvdCh0aGVTbG90TmFtZSkpCiAgICAgICAgICAgIGZvciBhbkluc3QgaW4gYW5JbnN0TGlzdDoKICAgICAgICAgICAgICAgIGlmIGFuSW5zdCA9PSB0aGVJbnN0YW5jZVRvQWRkOgogICAgICAgICAgICAgICAgICAgIHJldHVybgogICAgICAgICAgICAjIGVsc2Ugd2UgaGF2ZW4ndCBnb3QgdGhpcyBhbHJlYWR5LCBzbyBhZGQgaXQKICAgICAgICAgICAgdGhlSW5zdGFuY2UuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QodGhlU2xvdE5hbWUpLCB0aGVJbnN0YW5jZVRvQWRkKQogICAgICAgIGVsc2U6CiAgICAgICAgICAgIHNldFNsb3QodGhlSW5zdGFuY2UsIHRoZVNsb3ROYW1lLCB0aGVJbnN0YW5jZVRvQWRkKQogICAgZWxzZToKICAgICAgICBwcmludCAiV0FSTklORzogQXR0ZW1wdCB0byBzZXQgbm9uLWV4aXN0ZW50IHNsb3Q6ICIgKyB0aGVTbG90TmFtZQoKIyBGaW5kIHRoZSBpbnN0YW5jZSBieSBhIGNvbnRhaW5zIGNhc2Utc2Vuc2l0aXZlIG1hdGNoIG9uIHRoZSBpbnN0YW5jZSBuYW1lIGluIEVzc2VudGlhbCByZXBvc2l0b3J5CiMgVXNlIHRoaXMgZm9yIGdldHRpbmcgaW5zdGFuY2VzIHRoYXQgYXJlIGV4cGVjdGVkIHRvIGFscmVhZHkgYmUgaW4gdGhlIHJlcG9zaXRvcnkKIyBJZiBub3QgZm91bmQsIGNyZWF0ZSBhIG5ldyBvbmUuCiMgdGhlQ2xhc3NOYW1lIC0gdGhlIEVzc2VudGlhbCBjbGFzcyBmb3IgdGhlIGluc3RhbmNlCiMgdGhlRXh0ZXJuYWxSZWYgLSB0aGUgRXh0ZXJuYWwgUmVmZXJlbmNlIElEIGZvciB0aGlzIGluc3RhbmNlCiMgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5IC0gdGhlIEV4dGVybmFsIFJlcG9zaXRvcnkgdGhhdCB0aGVFeHRlcm5hbFJlZiBhcHBsaWVzIHRvCiMgdGhlSW5zdGFuY2VOYW1lIC0gdGhlIG5hbWUgb2YgdGhlIGluc3RhbmNlIGluIHRoZSBFc3NlbnRpYWwgUmVwb3NpdG9yeQpkZWYgZ2V0RXNzZW50aWFsSW5zdGFuY2VDb250YWlucyh0aGVDbGFzc05hbWUsIHRoZUV4dGVybmFsUmVmLCB0aGVFeHRlcm5hbFJlcG9zaXRvcnksIHRoZUluc3RhbmNlTmFtZSk6CiAgICAjIDIwLjA5LjIwMTEgSldDIC0gaGFuZGxlIGVtcHR5IHRoZUluc3RhbmNlTmFtZQogICAgaWYgdGhlSW5zdGFuY2VOYW1lID09ICIiOgogICAgICAgIHRoZUluc3RhbmNlTmFtZSA9IHRoZUV4dGVybmFsUmVmCiAgICAgICAgcHJpbnQgIkhhbmRsaW5nIGVtcHR5IGluc3RhbmNlIG5hbWUgZm9yICIgKyB0aGVFeHRlcm5hbFJlZgogICAgCiAgICAjIDIwLjA5LjIwMTEgSldDIC0gTWFrZSBzdXJlIHRoYXQgdGhlIHNvdXJjZSBjbGFzcyBpcyBpbiB0aGUgdGFyZ2VydCByZXBvc2l0b3J5CiAgICBhQ2xzID0ga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkgICAgCiAgICAjIGlmIG5vdC1yZXBvcnQgYSB3YXJuaW5nIGFuZCBza2lwIHRoYXQgaW5zdGFuY2UuCiAgICBpZiBhQ2xzID09IE5vbmU6CiAgICAgICAgcHJpbnQgIldBUk5JTkc6IFNraXBwaW5nIGluc3RhbmNlIG9mIHVua25vd24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUgKyAiIDogIiArIHRoZUluc3RhbmNlTmFtZQogICAgICAgIHJldHVybiBOb25lCiAgICAKICAgIGFuSW5zdExpc3QgPSBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKS5nZXREaXJlY3RJbnN0YW5jZXMoKQogICAgZm9yIGFuSW5zdCBpbiBhbkluc3RMaXN0OgogICAgICAgIGFuRXh0ZXJuYWxSZWZMaXN0ID0gYW5JbnN0LmdldERpcmVjdE93blNsb3RWYWx1ZXMoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSkKICAgICAgICBpZiBhbkV4dGVybmFsUmVmTGlzdCAhPSBOb25lOgkKICAgICAgICAgICAgYW5FeHRlcm5hbFJlZiA9IGdldEV4dGVybmFsUmVmSW5zdChhbkV4dGVybmFsUmVmTGlzdCwgZ2V0RXh0ZXJuYWxSZXBvc2l0b3J5KHRoZUV4dGVybmFsUmVwb3NpdG9yeSkpCiAgICAgICAgICAgIGlmIGFuRXh0ZXJuYWxSZWYgIT0gTm9uZToKICAgICAgICAgICAgICAgIGFuRXh0ZXJuYWxJRCA9IGFuRXh0ZXJuYWxSZWYuZ2V0RGlyZWN0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX2luc3RhbmNlX3JlZmVyZW5jZSIpKQogICAgICAgICAgICAgICAgaWYoYW5FeHRlcm5hbElEID09IHRoZUV4dGVybmFsUmVmKToKICAgICAgICAgICAgICAgICAgICBhbkV4dGVybmFsUmVmLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF91cGRhdGVfZGF0ZSIpLCB0aW1lc3RhbXAoKSkKICAgICAgICAgICAgICAgICAgICBwcmludCAiVXBkYXRlZCBJbnN0YW5jZSB2aWEgRXh0ZXJuYWwgUmVmZXJlbmNlIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICAgICAgICAgICAgICAgICAgcmV0dXJuIGFuSW5zdAoKCSMgSWYgd2UncmUgaGVyZSwgdGhpcyBleHRlcm5hbCByZWZlcmVuY2UgaGFzbid0IGJlZW4gZm91bmQuCgkjIFRyeSB0byBmaW5kIGJ5IGluc3RhbmNlX25hbWUgYW5kIGNhc2Ugc2Vuc2l0aXZlCiAgICBhTmFtZVNsb3QgPSBnZXROYW1lU2xvdEZvckNsYXNzKHRoZUNsYXNzTmFtZSkKICAgIGZvciBhbkluc3QgaW4gYW5JbnN0TGlzdDoKICAgICAgICBhTmFtZSA9IGFuSW5zdC5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdChhTmFtZVNsb3QpKQoJCQogICAgICAgIGlmIGFOYW1lICE9IE5vbmU6CiAgICAgICAgICAgIGlmKGFOYW1lLmZpbmQodGhlSW5zdGFuY2VOYW1lKSAhPSAtMSk6CiAgICAgICAgICAgICAgICAjIFdlIGhhdmUgZm91bmQgYSBtYXRjaAogICAgICAgICAgICAgICAgYW5FeHRlcm5hbFJlZiA9IGNyZWF0ZUV4dGVybmFsUmVmSW5zdCh0aGVFeHRlcm5hbFJlcG9zaXRvcnksIHRoZUV4dGVybmFsUmVmKQogICAgICAgICAgICAgICAgYW5JbnN0LmFkZE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X2luc3RhbmNlX3JlZmVyZW5jZSIpLCBhbkV4dGVybmFsUmVmKQogICAgICAgICAgICAgICAgcHJpbnQgIlVwZGF0ZWQgaW5zdGFuY2UgdmlhIG5hbWUgbWF0Y2gsIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICAgICAgICAgICAgICByZXR1cm4gYW5JbnN0CgkJCQkKICAgICMgaWYgd2UncmUgaGVyZSwgd2UgaGF2ZW4ndCBmb3VuZCBvbmUsIHNvIGNyZWF0ZSBvbmUKICAgIGFOZXdJbnN0ID0ga2IuY3JlYXRlSW5zdGFuY2UoTm9uZSwga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkpCgkKCSMgSGFuZGxlIHRoZSAzIHZhcmlhbnRzIG9mIG5hbWUKCSNhTmFtZVNsb3QgPSBnZXROYW1lU2xvdChhTmV3SW5zdCkKICAgIGFOZXdJbnN0LnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KGFOYW1lU2xvdCksIHRoZUluc3RhbmNlTmFtZSkJCgkJCQkKICAgIGFuRXh0ZXJuYWxSZWYgPSBjcmVhdGVFeHRlcm5hbFJlZkluc3QodGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVFeHRlcm5hbFJlZikKICAgIGFOZXdJbnN0LmFkZE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X2luc3RhbmNlX3JlZmVyZW5jZSIpLCBhbkV4dGVybmFsUmVmKQogICAgcHJpbnQgIkNyZWF0ZWQgbmV3IGluc3RhbmNlIG9mIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICByZXR1cm4gYU5ld0luc3QKCiMgRmluZCB0aGUgaW5zdGFuY2UgYnkgYSBjb250YWlucyBtYXRjaCAtIGlnbm9yaW5nIGNhc2UgLSBvbiB0aGUgaW5zdGFuY2UgbmFtZSBpbiBFc3NlbnRpYWwgcmVwb3NpdG9yeQojIFVzZSB0aGlzIGZvciBnZXR0aW5nIGluc3RhbmNlcyB0aGF0IGFyZSBleHBlY3RlZCB0byBhbHJlYWR5IGJlIGluIHRoZSByZXBvc2l0b3J5LiBVc2UgdGhlTWF0Y2hTdHJpbmcKIyB0byBzcGVjaWZ5IHRoZSBzdHJpbmcgdG8gdXNlIGFzIGEgbWF0Y2ggb24gZXhpc3RpbmcgaW5zdGFuY2VzLgojIElmIG5vdCBmb3VuZCwgY3JlYXRlIGEgbmV3IG9uZS4KIyB0aGVDbGFzc05hbWUgLSB0aGUgRXNzZW50aWFsIGNsYXNzIGZvciB0aGUgaW5zdGFuY2UKIyB0aGVFeHRlcm5hbFJlZiAtIHRoZSBFeHRlcm5hbCBSZWZlcmVuY2UgSUQgZm9yIHRoaXMgaW5zdGFuY2UKIyB0aGVFeHRlcm5hbFJlcG9zaXRvcnkgLSB0aGUgRXh0ZXJuYWwgUmVwb3NpdG9yeSB0aGF0IHRoZUV4dGVybmFsUmVmIGFwcGxpZXMgdG8KIyB0aGVJbnN0YW5jZU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgaW5zdGFuY2UgaW4gdGhlIEVzc2VudGlhbCBSZXBvc2l0b3J5CiMgdGhlTWF0Y2hTdHJpbmcgLSB0aGUgc3RyaW5nIHRoYXQgc2hvdWxkIGJlIHVzZWQgdG8gbWF0Y2ggYWdhaW5zdCBhbmQgZmluZCB0aGUgaW5zdGFuY2UKZGVmIGdldEVzc2VudGlhbEluc3RhbmNlQ29udGFpbnNJZ25vcmVDYXNlKHRoZUNsYXNzTmFtZSwgdGhlRXh0ZXJuYWxSZWYsIHRoZUV4dGVybmFsUmVwb3NpdG9yeSwgdGhlSW5zdGFuY2VOYW1lLCB0aGVNYXRjaFN0cmluZyk6Cglhbkluc3RMaXN0ID0ga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkuZ2V0RGlyZWN0SW5zdGFuY2VzKCkKCWZvciBhbkluc3QgaW4gYW5JbnN0TGlzdDoKCQlhbkV4dGVybmFsUmVmTGlzdCA9IGFuSW5zdC5nZXREaXJlY3RPd25TbG90VmFsdWVzKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfaW5zdGFuY2VfcmVmZXJlbmNlIikpCgkJaWYgYW5FeHRlcm5hbFJlZkxpc3QgIT0gTm9uZToJCgkJCWFuRXh0ZXJuYWxSZWYgPSBnZXRFeHRlcm5hbFJlZkluc3QoYW5FeHRlcm5hbFJlZkxpc3QsIGdldEV4dGVybmFsUmVwb3NpdG9yeSh0aGVFeHRlcm5hbFJlcG9zaXRvcnkpKQoJCQlpZiBhbkV4dGVybmFsUmVmICE9IE5vbmU6CgkJCQlhbkV4dGVybmFsSUQgPSBhbkV4dGVybmFsUmVmLmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9pbnN0YW5jZV9yZWZlcmVuY2UiKSkKCQkJCWlmKGFuRXh0ZXJuYWxJRCA9PSB0aGVFeHRlcm5hbFJlZik6CgkJCQkJYW5FeHRlcm5hbFJlZi5zZXRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfdXBkYXRlX2RhdGUiKSwgdGltZXN0YW1wKCkpCgkJCQkJcHJpbnQgIlVwZGF0ZWQgSW5zdGFuY2UgdmlhIEV4dGVybmFsIFJlZmVyZW5jZSBvbiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQoJCQkJCXJldHVybiBhbkluc3QKCQkJCQkKCSMgSWYgd2UncmUgaGVyZSwgdGhpcyBleHRlcm5hbCByZWZlcmVuY2UgaGFzbid0IGJlZW4gZm91bmQuCgkjIFRyeSB0byBmaW5kIGJ5IGluc3RhbmNlX25hbWUgLSBpZ25vcmluZyBjYXNlIG9mIGVhY2gKCWFOYW1lU2xvdCA9IGdldE5hbWVTbG90Rm9yQ2xhc3ModGhlQ2xhc3NOYW1lKQoJZm9yIGFuSW5zdCBpbiBhbkluc3RMaXN0OgoJCWFOYW1lID0gYW5JbnN0LmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KGFOYW1lU2xvdCkpCgkJaWYgYU5hbWUgIT0gTm9uZToKCQkJYU5hbWUgPSBhTmFtZS5sb3dlcigpCgkJCWFNYXRjaE5hbWUgPSB0aGVNYXRjaFN0cmluZy5sb3dlcigpCgkJCWlmKChhTmFtZS5maW5kKGFNYXRjaE5hbWUpICE9IC0xKSBvciAoYU1hdGNoTmFtZS5maW5kKGFOYW1lKSAhPSAtMSkpOgoJCQkJIyBXZSBoYXZlIGZvdW5kIGEgbWF0Y2gKCQkJCWFuRXh0ZXJuYWxSZWYgPSBjcmVhdGVFeHRlcm5hbFJlZkluc3QodGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVFeHRlcm5hbFJlZikKCQkJCWFuSW5zdC5hZGRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSwgYW5FeHRlcm5hbFJlZikKCQkJCXByaW50ICJVcGRhdGVkIGluc3RhbmNlIHZpYSBuYW1lIG1hdGNoLCBvbiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQoJCQkJcmV0dXJuIGFuSW5zdAoJCQkJCgkjIGlmIHdlJ3JlIGhlcmUsIHdlIGhhdmVuJ3QgZm91bmQgb25lLCBzbyBjcmVhdGUgb25lCglhTmV3SW5zdCA9IGtiLmNyZWF0ZUluc3RhbmNlKE5vbmUsIGtiLmdldENscyh0aGVDbGFzc05hbWUpKQoJYU5ld0luc3Quc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoYU5hbWVTbG90KSwgdGhlSW5zdGFuY2VOYW1lKQkJCQoJYW5FeHRlcm5hbFJlZiA9IGNyZWF0ZUV4dGVybmFsUmVmSW5zdCh0aGVFeHRlcm5hbFJlcG9zaXRvcnksIHRoZUV4dGVybmFsUmVmKQoJYU5ld0luc3QuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfaW5zdGFuY2VfcmVmZXJlbmNlIiksIGFuRXh0ZXJuYWxSZWYpCglwcmludCAiQ3JlYXRlZCBuZXcgaW5zdGFuY2Ugb2YgY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKCXJldHVybiBhTmV3SW5zdAoJCiMgRGVmaW5lIGEgbmV3IEV4dGVybmFsIFJlcG9zaXRvcnkgb3IgaWdub3JlIGRlZmluaXRpb24gaWYgdGhlIHJlcG9zaXRvcnkgaXMgYWxyZWFkeSBrbm93bgojIHRoZUV4dGVybmFsUmVwb3NpdG9yeSAtIHRoZSBuYW1lIG9mIHRoZSBleHRlcm5hbCByZXBvc2l0b3J5CmRlZiBkZWZpbmVFeHRlcm5hbFJlcG9zaXRvcnkodGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVEZXNjcmlwdGlvbik6CiAgICBhbkluc3RhbmNlID0gR2V0SW5zdGFuY2VPZkNsYXNzKCJFeHRlcm5hbF9SZXBvc2l0b3J5IiwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5KQogICAgaWYgYW5JbnN0YW5jZSAhPSBOb25lOgogICAgICAgIHJldHVybiBhbkluc3RhbmNlCgoJIyBpZiB3ZSdyZSBoZXJlIGl0J3Mgbm90IGRlZmluZWQsIHNvIGRlZmluZSBpdC4KICAgIGFOZXdSZXBvcyA9IGtiLmNyZWF0ZUluc3RhbmNlKE5vbmUsIGtiLmdldENscygiRXh0ZXJuYWxfUmVwb3NpdG9yeSIpKQogICAgYU5ld1JlcG9zLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIiksIHRoZUV4dGVybmFsUmVwb3NpdG9yeSkKICAgIGFOZXdSZXBvcy5zZXRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZGVzY3JpcHRpb24iKSwgdGhlRGVzY3JpcHRpb24pCiAgICByZXR1cm4gYU5ld1JlcG9zCgkKIyBGdW5jdGlvbiB0byBhZGQgYSBuZXcgQXR0cmlidXRlIGluc3RhbmNlIHRvIHRoZSBFc3NlbnRpYWwgbW9kZWwuCiMgdGhlTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBBdHRyaWJ1dGUKIyB0aGVEZXNjcmlwdGlvbiAtIGEgZGVzY3JpcHRpb24gb2YgdGhlIGF0dHJpYnV0ZQojIHRoZVVuaXQgLSB0aGUgdW5pdHMgb2YgdGhlIGF0dHJpYnV0ZSB2YWx1ZSwgZS5nLiBNQiwgTWJwcywga2cgb3IgJ18nIG9yIHNwYWNlIGlmIG5vdCBhcHBsaWNhYmxlCmRlZiBhZGROZXdFQU1BdHRyaWJ1dGUodGhlTmFtZSwgdGhlRGVzY3JpcHRpb24sIHRoZVVuaXQpOgoJYW5BdHRyaWJ1dGVMaXN0ID0ga2IuZ2V0Q2xzKCJBdHRyaWJ1dGUiKS5nZXREaXJlY3RJbnN0YW5jZXMoKQoJYUZvdW5kQXR0cmlidXRlID0gTm9uZQoJZm9yIGFuQXR0cmlidXRlIGluIGFuQXR0cmlidXRlTGlzdDoKCQlpZihhbkF0dHJpYnV0ZS5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgibmFtZSIpKSA9PSB0aGVOYW1lKToKCQkJYUZvdW5kQXR0cmlidXRlID0gYW5BdHRyaWJ1dGUKCQkJYnJlYWsKCWlmIGFGb3VuZEF0dHJpYnV0ZSA9PSBOb25lOgoJCWFOZXdBdHRyaWJ1dGUgPSBrYi5jcmVhdGVJbnN0YW5jZShOb25lLCBrYi5nZXRDbHMoIkF0dHJpYnV0ZSIpKQoJCWFOZXdBdHRyaWJ1dGUuc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoIm5hbWUiKSwgdGhlTmFtZSkKCQlhTmV3QXR0cmlidXRlLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJkZXNjcmlwdGlvbiIpLCB0aGVEZXNjcmlwdGlvbikKCQlhTmV3QXR0cmlidXRlLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJhdHRyaWJ1dGVfdmFsdWVfdW5pdCIpLCB0aGVVbml0KQoKIyBGdW5jdGlvbiB0byBmaW5kIFRlY2hub2xvZ3lfTm9kZSBpbnN0YW5jZXMgYnkgYSBuYW1lIG1hdGNoIChwcmVjaXNlLCBub3QgY29udGFpbnMpLCByZWdhcmRsZXNzIG9mIGNhc2UKIyBVc2UgdGhpcyBmb3IgZ2V0dGluZyBpbnN0YW5jZXMgdGhhdCBhcmUgZXhwZWN0ZWQgdG8gYWxyZWFkeSBiZSBpbiB0aGUgcmVwb3NpdG9yeS4gVXNlIHRoZU1hdGNoU3RyaW5nCiMgdG8gc3BlY2lmeSB0aGUgc3RyaW5nIHRvIHVzZSBhcyBhIG1hdGNoIG9uIGV4aXN0aW5nIGluc3RhbmNlcy4gTWF0Y2hpbmcgaXMgYmFzZWQgb24ganVzdCB0aGUgaG9zdG5hbWUKIyBhbmQgc3RyaXBzIGFueSB0cmFpbGluZyBkb21haW4gY29tcG9uZW50cyBmcm9tIHRoZSBuYW1lLCBhZnRlciB0aGUgZmlyc3QgJy4nCiMgSWYgbm90IGZvdW5kLCBjcmVhdGUgYSBuZXcgb25lLgojIHRoZUNsYXNzTmFtZSAtIHRoZSBFc3NlbnRpYWwgY2xhc3MgZm9yIHRoZSBpbnN0YW5jZQojIHRoZUV4dGVybmFsUmVmIC0gdGhlIEV4dGVybmFsIFJlZmVyZW5jZSBJRCBmb3IgdGhpcyBpbnN0YW5jZQojIHRoZUV4dGVybmFsUmVwb3NpdG9yeSAtIHRoZSBFeHRlcm5hbCBSZXBvc2l0b3J5IHRoYXQgdGhlRXh0ZXJuYWxSZWYgYXBwbGllcyB0bwojIHRoZUluc3RhbmNlTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBpbnN0YW5jZSBpbiB0aGUgRXNzZW50aWFsIFJlcG9zaXRvcnkKIyB0aGVNYXRjaFN0cmluZyAtIHRoZSBzdHJpbmcgdGhhdCBzaG91bGQgYmUgdXNlZCB0byBtYXRjaCBhZ2FpbnN0IGFuZCBmaW5kIHRoZSBpbnN0YW5jZSAKZGVmIGdldEVzc2VudGlhbE5vZGVJbnN0YW5jZUlnbm9yZUNhc2UodGhlQ2xhc3NOYW1lLCB0aGVFeHRlcm5hbFJlZiwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVJbnN0YW5jZU5hbWUsIHRoZU1hdGNoU3RyaW5nKToKCWFuSW5zdExpc3QgPSBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKS5nZXREaXJlY3RJbnN0YW5jZXMoKQoJZm9yIGFuSW5zdCBpbiBhbkluc3RMaXN0OgoJCWFuRXh0ZXJuYWxSZWZMaXN0ID0gYW5JbnN0LmdldERpcmVjdE93blNsb3RWYWx1ZXMoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSkKCQlpZiBhbkV4dGVybmFsUmVmTGlzdCAhPSBOb25lOgkKCQkJYW5FeHRlcm5hbFJlZiA9IGdldEV4dGVybmFsUmVmSW5zdChhbkV4dGVybmFsUmVmTGlzdCwgZ2V0RXh0ZXJuYWxSZXBvc2l0b3J5KHRoZUV4dGVybmFsUmVwb3NpdG9yeSkpCgkJCWlmIGFuRXh0ZXJuYWxSZWYgIT0gTm9uZToKCQkJCWFuRXh0ZXJuYWxJRCA9IGFuRXh0ZXJuYWxSZWYuZ2V0RGlyZWN0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX2luc3RhbmNlX3JlZmVyZW5jZSIpKQoJCQkJaWYoYW5FeHRlcm5hbElEID09IHRoZUV4dGVybmFsUmVmKToKCQkJCQlhbkV4dGVybmFsUmVmLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF91cGRhdGVfZGF0ZSIpLCB0aW1lc3RhbXAoKSkKCQkJCQlwcmludCAiVXBkYXRlZCBJbnN0YW5jZSB2aWEgRXh0ZXJuYWwgUmVmZXJlbmNlIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCgkJCQkJcmV0dXJuIGFuSW5zdAoJCQkJCQoJIyBJZiB3ZSdyZSBoZXJlLCB0aGlzIGV4dGVybmFsIHJlZmVyZW5jZSBoYXNuJ3QgYmVlbiBmb3VuZC4KCSMgVHJ5IHRvIGZpbmQgYnkgaW5zdGFuY2VfbmFtZSAtIGlnbm9yaW5nIGNhc2Ugb2YgZWFjaAoJZm9yIGFuSW5zdCBpbiBhbkluc3RMaXN0OgoJCWFOYW1lID0gYW5JbnN0LmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIikpCgkJaWYgYU5hbWUgIT0gTm9uZToKCQkJYU5hbWUgPSBhTmFtZS5zcGxpdCgiLiIsIDEpWzBdLmxvd2VyKCkKCQkJYU1hdGNoTmFtZSA9IHRoZU1hdGNoU3RyaW5nLmxvd2VyKCkKCQkJaWYoYU5hbWUgPT0gYU1hdGNoTmFtZSk6CgkJCQkjIFdlIGhhdmUgZm91bmQgYSBtYXRjaAoJCQkJYW5FeHRlcm5hbFJlZiA9IGNyZWF0ZUV4dGVybmFsUmVmSW5zdCh0aGVFeHRlcm5hbFJlcG9zaXRvcnksIHRoZUV4dGVybmFsUmVmKQoJCQkJYW5JbnN0LmFkZE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X2luc3RhbmNlX3JlZmVyZW5jZSIpLCBhbkV4dGVybmFsUmVmKQoJCQkJcHJpbnQgIlVwZGF0ZWQgaW5zdGFuY2UgdmlhIG5hbWUgbWF0Y2gsIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCgkJCQlyZXR1cm4gYW5JbnN0CgkJCQkKCSMgaWYgd2UncmUgaGVyZSwgd2UgaGF2ZW4ndCBmb3VuZCBvbmUsIHNvIGNyZWF0ZSBvbmUKCWFOZXdJbnN0ID0ga2IuY3JlYXRlSW5zdGFuY2UoTm9uZSwga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkpCglhTmV3SW5zdC5zZXRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgibmFtZSIpLCB0aGVJbnN0YW5jZU5hbWUpCQkJCglhbkV4dGVybmFsUmVmID0gY3JlYXRlRXh0ZXJuYWxSZWZJbnN0KHRoZUV4dGVybmFsUmVwb3NpdG9yeSwgdGhlRXh0ZXJuYWxSZWYpCglhTmV3SW5zdC5hZGRPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSwgYW5FeHRlcm5hbFJlZikKCXByaW50ICJDcmVhdGVkIG5ldyBpbnN0YW5jZSBvZiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQoJcmV0dXJuIGFOZXdJbnN0CgkKIyBGdW5jdGlvbiB0byBmaW5kIGluc3RhbmNlcyBieSBhIG5hbWUgbWF0Y2ggKHByZWNpc2UsIG5vdCBjb250YWlucyksIHJlZ2FyZGxlc3Mgb2YgY2FzZQojIFVzZSB0aGlzIGZvciBnZXR0aW5nIGluc3RhbmNlcyB0aGF0IGFyZSBleHBlY3RlZCB0byBhbHJlYWR5IGJlIGluIHRoZSByZXBvc2l0b3J5LiBVc2UgdGhlTWF0Y2hTdHJpbmcKIyB0byBzcGVjaWZ5IHRoZSBzdHJpbmcgdG8gdXNlIGFzIGEgbWF0Y2ggb24gZXhpc3RpbmcgaW5zdGFuY2VzLgojIElmIG5vdCBmb3VuZCwgY3JlYXRlIGEgbmV3IG9uZS4KIyB0aGVDbGFzc05hbWUgLSB0aGUgRXNzZW50aWFsIGNsYXNzIGZvciB0aGUgaW5zdGFuY2UKIyB0aGVFeHRlcm5hbFJlZiAtIHRoZSBFeHRlcm5hbCBSZWZlcmVuY2UgSUQgZm9yIHRoaXMgaW5zdGFuY2UKIyB0aGVFeHRlcm5hbFJlcG9zaXRvcnkgLSB0aGUgRXh0ZXJuYWwgUmVwb3NpdG9yeSB0aGF0IHRoZUV4dGVybmFsUmVmIGFwcGxpZXMgdG8KIyB0aGVJbnN0YW5jZU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgaW5zdGFuY2UgaW4gdGhlIEVzc2VudGlhbCBSZXBvc2l0b3J5CiMgdGhlTWF0Y2hTdHJpbmcgLSB0aGUgc3RyaW5nIHRoYXQgc2hvdWxkIGJlIHVzZWQgdG8gbWF0Y2ggYWdhaW5zdCBhbmQgZmluZCB0aGUgaW5zdGFuY2UgCmRlZiBnZXRFc3NlbnRpYWxJbnN0YW5jZUlnbm9yZUNhc2UodGhlQ2xhc3NOYW1lLCB0aGVFeHRlcm5hbFJlZiwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVJbnN0YW5jZU5hbWUsIHRoZU1hdGNoU3RyaW5nKToKICAgIGFuSW5zdExpc3QgPSBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKS5nZXREaXJlY3RJbnN0YW5jZXMoKQogICAgZm9yIGFuSW5zdCBpbiBhbkluc3RMaXN0OgogICAgICAgIGFuRXh0ZXJuYWxSZWZMaXN0ID0gYW5JbnN0LmdldERpcmVjdE93blNsb3RWYWx1ZXMoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSkKICAgICAgICBpZiBhbkV4dGVybmFsUmVmTGlzdCAhPSBOb25lOgogICAgICAgICAgICBhbkV4dGVybmFsUmVmID0gZ2V0RXh0ZXJuYWxSZWZJbnN0KGFuRXh0ZXJuYWxSZWZMaXN0LCBnZXRFeHRlcm5hbFJlcG9zaXRvcnkodGhlRXh0ZXJuYWxSZXBvc2l0b3J5KSkKICAgICAgICAgICAgaWYgYW5FeHRlcm5hbFJlZiAhPSBOb25lOgogICAgICAgICAgICAgICAgYW5FeHRlcm5hbElEID0gYW5FeHRlcm5hbFJlZi5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfaW5zdGFuY2VfcmVmZXJlbmNlIikpCiAgICAgICAgICAgICAgICBpZihhbkV4dGVybmFsSUQgPT0gdGhlRXh0ZXJuYWxSZWYpOgogICAgICAgICAgICAgICAgICAgIGFuRXh0ZXJuYWxSZWYuc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3VwZGF0ZV9kYXRlIiksIHRpbWVzdGFtcCgpKQogICAgICAgICAgICAgICAgICAgIHByaW50ICJVcGRhdGVkIEluc3RhbmNlIHZpYSBFeHRlcm5hbCBSZWZlcmVuY2Ugb24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKICAgICAgICAgICAgICAgICAgICByZXR1cm4gYW5JbnN0CgkJCQkJCiAgICAjIElmIHdlJ3JlIGhlcmUsIHRoaXMgZXh0ZXJuYWwgcmVmZXJlbmNlIGhhc24ndCBiZWVuIGZvdW5kLgogICAgIyBUcnkgdG8gZmluZCBieSBpbnN0YW5jZV9uYW1lIC0gaWdub3JpbmcgY2FzZSBvZiBlYWNoCiAgICBhTmFtZVNsb3QgPSBnZXROYW1lU2xvdEZvckNsYXNzKHRoZUNsYXNzTmFtZSkKICAgIGZvciBhbkluc3QgaW4gYW5JbnN0TGlzdDoKICAgICAgICBhTmFtZSA9IGFuSW5zdC5nZXREaXJlY3RPd25TbG90VmFsdWUoa2IuZ2V0U2xvdChhTmFtZVNsb3QpKQogICAgICAgIGlmIGFOYW1lICE9IE5vbmU6CiAgICAgICAgICAgIGFOYW1lID0gYU5hbWUubG93ZXIoKQogICAgICAgICAgICBhTWF0Y2hOYW1lID0gdGhlTWF0Y2hTdHJpbmcubG93ZXIoKQogICAgICAgICAgICBpZihhTmFtZSA9PSBhTWF0Y2hOYW1lKToKICAgICAgICAgICAgICAgICMgV2UgaGF2ZSBmb3VuZCBhIG1hdGNoCiAgICAgICAgICAgICAgICBhbkV4dGVybmFsUmVmID0gY3JlYXRlRXh0ZXJuYWxSZWZJbnN0KHRoZUV4dGVybmFsUmVwb3NpdG9yeSwgdGhlRXh0ZXJuYWxSZWYpCiAgICAgICAgICAgICAgICBhbkluc3QuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfaW5zdGFuY2VfcmVmZXJlbmNlIiksIGFuRXh0ZXJuYWxSZWYpCiAgICAgICAgICAgICAgICBwcmludCAiVXBkYXRlZCBpbnN0YW5jZSB2aWEgbmFtZSBtYXRjaCwgb24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKICAgICAgICAgICAgICAgIHJldHVybiBhbkluc3QKCQkJCQogICAgIyBpZiB3ZSdyZSBoZXJlLCB3ZSBoYXZlbid0IGZvdW5kIG9uZSwgc28gY3JlYXRlIG9uZQogICAgYU5ld0luc3QgPSBrYi5jcmVhdGVJbnN0YW5jZShOb25lLCBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKSkKICAgIGFOZXdJbnN0LnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KGFOYW1lU2xvdCksIHRoZUluc3RhbmNlTmFtZSkJCQkKICAgIGFuRXh0ZXJuYWxSZWYgPSBjcmVhdGVFeHRlcm5hbFJlZkluc3QodGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVFeHRlcm5hbFJlZikKICAgIGFOZXdJbnN0LmFkZE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X2luc3RhbmNlX3JlZmVyZW5jZSIpLCBhbkV4dGVybmFsUmVmKQogICAgcHJpbnQgIkNyZWF0ZWQgbmV3IGluc3RhbmNlIG9mIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICByZXR1cm4gYU5ld0luc3QKCQojIEZpbmQgdGhlIHJpZ2h0IG5hbWUgc2xvdCBmb3IgYSBnaXZlbiBpbnN0YW5jZS4gSWYgaXQncyBhbiBFQV9DbGFzcyBpbnN0YW5jZSwgdGhlIAojIG5hbWUgc2xvdCB3aWxsIGJlIHJldHVybmVkLiBJZiBpdCdzIGFuIEVBX1JlbGF0aW9uIGluc3RhbmNlLCB0aGUgcmVsYXRpb25fbmFtZSBzbG90CiMgaXMgcmV0dXJuZWQuIElmIGl0J3MgYW4gaW5zdGFuY2Ugb2YgOkVBX0dyYXBoX1JlbGF0aW9uLCB0aGUgOnJlbGF0aW9uX25hbWUgc2xvdCBpcwojIHJldHVybmVkCiMgdGhlSW5zdGFuY2UgdGhlIGluc3RhbmNlIGZvciB3aGljaCB0aGUgY29ycmVjdCBuYW1lIHNsb3QgaXMgcmVxdWlyZWQuCiMgcmV0dXJucyBhIHN0cmluZyBuYW1lIG9mIHRoZSBjb3JyZWN0IHNsb3QgdG8gdXNlLgpkZWYgZ2V0TmFtZVNsb3QodGhlSW5zdGFuY2UpOgoJYUNvcnJlY3ROYW1lU2xvdCA9ICJuYW1lIgoJZm9yIGFTbG90IGluIHRoZUluc3RhbmNlLmdldE93blNsb3RzKCk6CgkJaWYoYVNsb3QgPT0ga2IuZ2V0U2xvdCgibmFtZSIpKToKCQkJYUNvcnJlY3ROYW1lU2xvdCA9ICJuYW1lIgoJCWVsaWYoYVNsb3QgPT0ga2IuZ2V0U2xvdCgicmVsYXRpb25fbmFtZSIpKToKCQkJYUNvcnJlY3ROYW1lU2xvdCA9ICJyZWxhdGlvbl9uYW1lIgoJCWVsaWYoYVNsb3QgPT0ga2IuZ2V0U2xvdCgiOnJlbGF0aW9uX25hbWUiKSk6CgkJCWFDb3JyZWN0TmFtZVNsb3QgPSAiOnJlbGF0aW9uX25hbWUiCgoJcmV0dXJuIGFDb3JyZWN0TmFtZVNsb3QKCQojIEZpbmQgdGhlIHJpZ2h0IG5hbWUgc2xvdCBmb3IgYSBnaXZlbiBjbGFzcy4gSWYgaXQncyBhbiBFQV9DbGFzcywgdGhlIAojIG5hbWUgc2xvdCB3aWxsIGJlIHJldHVybmVkLiBJZiBpdCdzIGFuIEVBX1JlbGF0aW9uIGNsYXNzLCB0aGUgcmVsYXRpb25fbmFtZSBzbG90CiMgaXMgcmV0dXJuZWQuIElmIGl0J3MgYW4gY2xhc3Mgb2YgOkVBX0dyYXBoX1JlbGF0aW9uLCB0aGUgOnJlbGF0aW9uX25hbWUgc2xvdCBpcwojIHJldHVybmVkCiMgdGhlQ2xhc3NOYW1lIHRoZSBuYW1lIG9mIHRoZSBjbGFzcyBmb3Igd2hpY2ggdGhlIGNvcnJlY3QgbmFtZSBzbG90IGlzIHJlcXVpcmVkLgojIHJldHVybnMgYSBzdHJpbmcgbmFtZSBvZiB0aGUgY29ycmVjdCBzbG90IHRvIHVzZS4KZGVmIGdldE5hbWVTbG90Rm9yQ2xhc3ModGhlQ2xhc3NOYW1lKToKCWFDb3JyZWN0TmFtZVNsb3QgPSAibmFtZSIKCWZvciBhU2xvdCBpbiBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKS5nZXRUZW1wbGF0ZVNsb3RzKCk6CgkJaWYoYVNsb3QgPT0ga2IuZ2V0U2xvdCgibmFtZSIpKToKCQkJYUNvcnJlY3ROYW1lU2xvdCA9ICJuYW1lIgoJCWVsaWYoYVNsb3QgPT0ga2IuZ2V0U2xvdCgicmVsYXRpb25fbmFtZSIpKToKCQkJYUNvcnJlY3ROYW1lU2xvdCA9ICJyZWxhdGlvbl9uYW1lIgoJCWVsaWYoYVNsb3QgPT0ga2IuZ2V0U2xvdCgiOnJlbGF0aW9uX25hbWUiKSk6CgkJCWFDb3JyZWN0TmFtZVNsb3QgPSAiOnJlbGF0aW9uX25hbWUiCgoJcmV0dXJuIGFDb3JyZWN0TmFtZVNsb3QKCQojCmRlZiBDcmVhdGVOZXdFc3NlbnRpYWxJbnN0YW5jZSh0aGVDbGFzc05hbWUsIHRoZUluc3RhbmNlTmFtZSk6CiAgICAiIiIgQ3JlYXRlIGEgbmV3IGluc3RhbmNlIGluIHRoZSByZXBvc2l0b3J5IHdpdGhvdXQgc2VhcmNoaW5nIGZvciBhbnkKICAgICAgICBleGlzdGluZyBpbnN0YW5jZXMgYW5kIHdpdGhvdXQgYXNzb2NpYXRpbmcgYW4gZXh0ZXJuYWwgcmVwb3NpdG9yeSAKICAgICAgICByZWZlcmVuY2UKICAgICAgICAKICAgICAgICB0aGVDbGFzc05hbWUgLSB0aGUgbmFtZSBvZiB0aGUgQ2xhc3Mgb2Ygd2hpY2ggdG8gY3JlYXRlIHRoZSBpbnN0YW5jZQogICAgICAgIHRoZUluc3RhbmNlTmFtZSAtIHRoZSB2YWx1ZSBvZiB0aGUgIm5hbWUiIHNsb3Qgb24gdGhlIG5ldyBFc3NlbnRpYWwgaW5zdGFuY2UKICAgICAgICAKICAgICAgICByZXR1cm5zIGEgcmVmZXJlbmNlIHRvIHRoZSBuZXcgaW5zdGFuY2UKICAgICAgICAKICAgICAgICAxOS4xMS4yMDEyIEpXQwogICAgIiIiCiAgICBhTmV3SW5zdCA9IENyZWF0ZU5ld0Vzc2VudGlhbEluc3RhbmNlV2l0aElEKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VOYW1lLCBOb25lKSAKICAgIHJldHVybiBhTmV3SW5zdAogICAgCiMKZGVmIENyZWF0ZU5ld0Vzc2VudGlhbEluc3RhbmNlV2l0aElEKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VOYW1lLCB0aGVJbnN0YW5jZUlEKToKICAgICIiIiBDcmVhdGUgYSBuZXcgaW5zdGFuY2UgaW4gdGhlIHJlcG9zaXRvcnkgd2l0aG91dCBzZWFyY2hpbmcgZm9yIGFueQogICAgICAgIGV4aXN0aW5nIGluc3RhbmNlcyBhbmQgd2l0aG91dCBhc3NvY2lhdGluZyBhbiBleHRlcm5hbCByZXBvc2l0b3J5IAogICAgICAgIHJlZmVyZW5jZQogICAgICAgIAogICAgICAgIHRoZUNsYXNzTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBDbGFzcyBvZiB3aGljaCB0byBjcmVhdGUgdGhlIGluc3RhbmNlCiAgICAgICAgdGhlSW5zdGFuY2VOYW1lIC0gdGhlIHZhbHVlIG9mIHRoZSAibmFtZSIgc2xvdCBvbiB0aGUgbmV3IEVzc2VudGlhbCBpbnN0YW5jZQogICAgICAgIHRoZUluc3RhbmNlSUQgLSB0aGUgaW50ZXJuYWwsIFByb3RlZ2UgSUQgdGhhdCBzaG91bGQgYmUgdXNlZCBmb3IgdGhpcyBpbnN0YW5jZQogICAgICAgIAogICAgICAgIHJldHVybnMgYSByZWZlcmVuY2UgdG8gdGhlIG5ldyBpbnN0YW5jZQogICAgICAgIAogICAgICAgIDE5LjExLjIwMTIgSldDCiAgICAiIiIKICAgICMgaWYgd2UncmUgaGVyZSwgd2UgaGF2ZW4ndCBmb3VuZCBvbmUsIHNvIGNyZWF0ZSBvbmUKICAgIGFOZXdJbnN0ID0ga2IuY3JlYXRlSW5zdGFuY2UodGhlSW5zdGFuY2VJRCwga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkpCgkKICAgICMgSGFuZGxlIHRoZSAzIHZhcmlhbnRzIG9mIG5hbWUKICAgIGFOYW1lU2xvdCA9IGdldE5hbWVTbG90KGFOZXdJbnN0KQogICAgYU5ld0luc3Quc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoYU5hbWVTbG90KSwgdGhlSW5zdGFuY2VOYW1lKQkKICAgIHByaW50ICJDcmVhdGVkIG5ldyBpbnN0YW5jZSBvZiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQogICAgcmV0dXJuIGFOZXdJbnN0CgojCmRlZiBHZXRFc3NlbnRpYWxJbnN0YW5jZUJ5SUQodGhlQ2xhc3NOYW1lLCB0aGVJbnN0YW5jZU5hbWUsIHRoZUluc3RhbmNlSUQpOgogICAgIiIiIEZpbmQgdGhlIGluc3RhbmNlIGluIHRoZSByZXBvc2l0b3J5IHdpdGggdGhlIHNwZWNpZmllZCBpbnRlcm5hbCBJRAogICAgICAgIElmIG5vdCBmb3VuZCwgY3JlYXRlIG9uZSBpbiB0aGUgcmVwb3NpdG9yeSB3aXRoIHRoYXQgaW50ZXJuYWwgSUQgYW5kIHdpdGggCiAgICAgICAgdGhlIHNwZWNpZmllZCB0eXBlIGFuZCBuYW1lLgogICAgICAgIAogICAgICAgIHRoZUNsYXNzTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBDbGFzcyBvZiB3aGljaCB0byBjcmVhdGUgdGhlIGluc3RhbmNlCiAgICAgICAgdGhlSW5zdGFuY2VOYW1lIC0gdGhlIHZhbHVlIG9mIHRoZSAibmFtZSIgc2xvdCBvbiB0aGUgbmV3IEVzc2VudGlhbCBJbnN0YW5jZQogICAgICAgIHRoZUluc3RhbmNlSUQgLSB0aGUgaW50ZXJuYWwsIFByb3RlZ2UgSUQgdGhhdCBpcyBiZWluZyBzZWFyY2hlZCBmb3IgYW5kIHVzZWQKICAgICAgICBmb3IgYW55IG5ldyBpbnN0YW5jZQogICAgICAgIAogICAgICAgIHJldHVybnMgdGhlIG5ldyBpbnN0YW5jZSBpZGVudGlmaWVkIGJ5IElECiAgICAgICAgCiAgICAgICAgMTkuMTEuMjAxMiBKV0MKICAgICIiIgogICAgIyBGaW5kIGFuIGluc3RhbmNlIGluIHRoZSByZXBvc2l0b3J5IHdpdGggaW50ZXJuYWwgSUQgPSB0aGVJbnN0YW5jZUlECiAgICBhbkluc3RhbmNlID0ga2IuZ2V0SW5zdGFuY2UodGhlSW5zdGFuY2VJRCkKICAgIGlmIGFuSW5zdGFuY2UgIT0gTm9uZToKICAgICAgICBwcmludCAiRm91bmQgaW5zdGFuY2UgYnkgSUQgb24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKICAgICAgICAgCiAgICAjIElmIG5vdCBmb3VuZCwgY3JlYXRlIGl0CiAgICBpZiBhbkluc3RhbmNlID09IE5vbmU6CiAgICAgICAgYW5JbnN0YW5jZSA9IENyZWF0ZU5ld0Vzc2VudGlhbEluc3RhbmNlV2l0aElEKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VOYW1lLCB0aGVJbnN0YW5jZUlEKQogICAgCiAgICByZXR1cm4gYW5JbnN0YW5jZQojCgojIEludGVsbGlnZW50IEVzc2VudGlhbCBHZXQgSW5zdGFuY2UgZnVuY3Rpb24uCmRlZiBFc3NlbnRpYWxHZXRJbnN0YW5jZSh0aGVDbGFzc05hbWUsIHRoZUluc3RhbmNlSUQsIHRoZUluc3RhbmNlTmFtZSwgdGhlRXh0ZXJuYWxJRCwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSk6CiAgICAiIiIgR2V0IHRoZSBFc3NlbnRpYWwgaW5zdGFuY2UgZnJvbSB0aGUgY3VycmVudCByZXBvc2l0b3J5IG9mIHRoZSBzcGVjaWZpZWQgQ2xhc3MuIAogICAgICAgIEZpcnN0bHksIHRoZSByZXBvc2l0b3J5IHdpbGwgYmUgc2VhcmNoZWQgZm9yIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UgSUQgKGludGVybmFsIFByb3RlZ2UgbmFtZSkuIAogICAgICAgIElmIG5vIHN1Y2ggaW5zdGFuY2UgY2FuIGJlIGZvdW5kLCB0aGUgcmVwb3NpdG9yeSBpcyBzZWFyY2hlZCBmb3IgYW4gaW5zdGFuY2Ugd2l0aCB0aGUgc3BlY2lmaWVkIGV4dGVybmFsIAogICAgICAgIHJlcG9zaXRvcnkgaW5zdGFuY2UgcmVmZXJlbmNlLiAKICAgICAgICBJZiBubyBzdWNoIGluc3RhbmNlIGNhbiBiZSBmb3VuZCwgdGhlIHJlcG9zaXRvcnkgaXMgc2VhcmNoZWQgaXMgZm9yIGluc3RhbmNlcyBvZiB0aGUgU3BlY2lmaWVkIGNsYXNzIHRoYXQKICAgICAgICBoYXMgYSBuYW1lIHRoYXQgZXhhY3RseSAoY2FzZSBhbmQgZnVsbCBuYW1lKSBtYXRjaGVzIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UgbmFtZS4KICAgICAgICBJZiBubyBzdWNoIGluc3RhbmNlIGNhbiBiZSBmb3VuZCwgYSBuZXcgaW5zdGFuY2Ugd2l0aCB0aGUgYWJvdmUgdGhlIHBhcmFtZXRlcnMgaXMgY3JlYXRlZC4gSW4gdGhpcyBjYXNlCiAgICAgICAgUHJvdGVnZSB3aWxsIGF1dG9tYXRpY2FsbHkgYXNzaWduIGEgbmV3IGluc3RhbmNlIElELgogICAgICAgIAogICAgICAgIHRoZUNsYXNzTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBjbGFzcyBvZiB0aGUgaW5zdGFuY2UgdG8gZmluZC4gU2VhcmNoIGlzIHNjb3BlZCBieSBjbGFzcwogICAgICAgIHRoZUluc3RhbmNlSUQgLSB0aGUgaW50ZXJuYWwgUHJvdGVnZSBuYW1lIC8gSUQgZm9yIHRoZSBpbnN0YW5jZS4gU2V0IHRvICIiIHRvIGJ5cGFzcyBzZWFyY2ggYnkgaW5zdGFuY2UgSUQKICAgICAgICB0aGVJbnN0YW5jZU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgc3BlY2lmaWVkIGluc3RhbmNlLiBXaGVuIGFuIGluc3RhbmNlIGlzIGZvdW5kIGJ5IGluc3RhbmNlIElEIG9yIEV4dGVybmFsCiAgICAgICAgICAgICAgICAgICAgICAgICAgcmVmZXJlbmNlLCB0aGlzIHBhcmFtZXRlciBjYW4gYmUgdXNlZCB0byB1cGRhdGUgdGhlIG5hbWUgKEVzc2VudGlhbCBuYW1lIHNsb3QpIG9mIHRoZSAKICAgICAgICAgICAgICAgICAgICAgICAgICBpbnN0YW5jZS4KICAgICAgICB0aGVFeHRlcm5hbElEIC0gdGhlIElEIHRoYXQgdGhlIGluc3RhbmNlIGhhcyBpbiB0aGUgc3BlY2lmaWVkIGV4dGVybmFsIHNvdXJjZSByZXBvc2l0b3J5CiAgICAgICAgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBleHRlcm5hbCBzb3VyY2UgcmVwb3NpdG9yeSAgICAgICAgIAogICAgICAgIAogICAgICAgIHJldHVybnMgYSByZWZlcmVuY2UgdG8gdGhlIGNvcnJlY3QgRXNzZW50aWFsIEluc3RhbmNlIG9yIE5vbmUgaWYgYW4gYXR0ZW1wdCBpcyBtYWRlIHRvIGNyZWF0ZSBhbiBpbnN0YW5jZQogICAgICAgIG9mIGFuIHVua25vd24gY2xhc3MuCiAgICAgICAgCiAgICAgICAgMjAuMTEuMjAxMiBKV0MKICAgICIiIgogICAgYW5Fc3NlbnRpYWxJbnN0YW5jZSA9IE5vbmUKICAgIAogICAgIyAyMC4wOS4yMDExIEpXQyAtIE1ha2Ugc3VyZSB0aGF0IHRoZSBzb3VyY2UgY2xhc3MgaXMgaW4gdGhlIHRhcmdlcnQgcmVwb3NpdG9yeQogICAgYUNsYXNzID0ga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkgICAgCiAgICAjIGlmIG5vdC1yZXBvcnQgYSB3YXJuaW5nIGFuZCBza2lwIHRoYXQgaW5zdGFuY2UuCiAgICBpZiBhQ2xhc3MgPT0gTm9uZToKICAgICAgICBwcmludCAiV0FSTklORzogU2tpcHBpbmcgaW5zdGFuY2Ugb2YgdW5rbm93biBjbGFzczogIiArIHRoZUNsYXNzTmFtZQogICAgICAgIHJldHVybiBOb25lCiAgICAKICAgIGlmIHRoZUluc3RhbmNlSUQgIT0gTm9uZToKICAgICAgICBhbkVzc2VudGlhbEluc3RhbmNlID0gRmluZEVzc2VudGlhbEluc3RhbmNlQnlJRCh0aGVJbnN0YW5jZUlEKSAgICAgICAgCiAgICAgICAgUHJvY2Vzc0ZvdW5kSW5zdGFuY2UoYW5Fc3NlbnRpYWxJbnN0YW5jZSwgdGhlSW5zdGFuY2VOYW1lLCB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lLCB0aGVFeHRlcm5hbElEKQogICAgICAgIGlmIGFuRXNzZW50aWFsSW5zdGFuY2UgIT0gTm9uZToKICAgICAgICAgICAgcHJpbnQgIlVwZGF0ZWQgaW5zdGFuY2UgdmlhIGluc3RhbmNlIElELCBvbiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQogICAgICAgICAgICAKICAgICMgSWYgbm90IGZvdW5kLCBzZWFyY2ggYnkgZXh0ZXJuYWwgcmVwb3NpdG9yeSByZWZlcmVuY2UKICAgIGlmIGFuRXNzZW50aWFsSW5zdGFuY2UgPT0gTm9uZToKICAgICAgICAjIGFuRXNzZW50aWFsSW5zdGFuY2UgPSBGaW5kRXNzZW50aWFsSW5zdGFuY2VCeUV4dGVybmFsUmVmKGFDbGFzcywgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSwgdGhlRXh0ZXJuYWxJRCkKICAgICAgICAjIFByb2Nlc3NGb3VuZEluc3RhbmNlKGFuRXNzZW50aWFsSW5zdGFuY2UsIHRoZUluc3RhbmNlTmFtZSwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSwgdGhlRXh0ZXJuYWxJRCkKICAgICAgICAjIGlmIGFuRXNzZW50aWFsSW5zdGFuY2UgIT0gTm9uZToKICAgICAgICAjICAgICBwcmludCAiVXBkYXRlZCBpbnN0YW5jZSB2aWEgZXh0ZXJuYWwgcmVwb3NpdG9yeSByZWZlcmVuY2UsIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICAgICAgCiAgICAgICAgIyBJZiBub3QgZm91bmQsIHNlYXJjaCBieSBuYW1lCiAgICAgICAgaWYgYW5Fc3NlbnRpYWxJbnN0YW5jZSA9PSBOb25lOgogICAgICAgICAgICBhbkVzc2VudGlhbEluc3RhbmNlID0gRmluZEVzc2VudGlhbEluc3RhbmNlQnlOYW1lKGFDbGFzcywgdGhlSW5zdGFuY2VOYW1lKQogICAgICAgICAgICBVcGRhdGVPckFkZEV4dGVybmFsUmVmKGFuRXNzZW50aWFsSW5zdGFuY2UsIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUsIHRoZUV4dGVybmFsSUQpCiAgICAgICAgICAgIGlmIGFuRXNzZW50aWFsSW5zdGFuY2UgIT0gTm9uZToKICAgICAgICAgICAgICAgIHByaW50ICJVcGRhdGVkIGluc3RhbmNlIHZpYSBuYW1lLCBvbiBjbGFzczogIiArIHRoZUNsYXNzTmFtZQogICAgICAgIAogICAgICAgICMgSWYgbm90IGZvdW5kLCBjcmVhdGUgYSBuZXcgaW5zdGFuY2UKICAgICAgICBpZiBhbkVzc2VudGlhbEluc3RhbmNlID09IE5vbmU6ICAgICAgICAgICAgCiAgICAgICAgICAgIGFuRXNzZW50aWFsSW5zdGFuY2UgPSBDcmVhdGVOZXdFc3NlbnRpYWxJbnN0YW5jZSh0aGVDbGFzc05hbWUsIHRoZUluc3RhbmNlTmFtZSkKICAgICAgICAgICAgQWRkRXh0ZXJuYWxSZWZlcmVuY2VJRChhbkVzc2VudGlhbEluc3RhbmNlLCB0aGVFeHRlcm5hbElELCB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lKQogICAgCiAgICAjIFJldHVybiB0aGUgcmVzdWx0cyBvZiB0aGUgc2VhcmNoZXMuICAgICAgICAgICAgCiAgICByZXR1cm4gYW5Fc3NlbnRpYWxJbnN0YW5jZQojCgpkZWYgRmluZEVzc2VudGlhbEluc3RhbmNlQnlJRCh0aGVJbnN0YW5jZUlEKToKICAgICIiIiBGaW5kIHRoZSBpbnN0YW5jZSBvZiB0aGUgc3BlY2lmaWVkIGNsYXNzIHRoYXQgaGFzIHRoZSBpbnRlcm5hbCBJRCBzcGVjaWZpZWQuCiAgICAgICAgSWYgbm90IGZvdW5kIHJldHVybnMgTm9uZQogICAgICAgIAogICAgICAgIHRoZUNsYXNzIC0gdGhlIGNsYXNzIG9mIHRoZSBpbnN0YW5jZSB0byBmaW5kCiAgICAgICAgdGhlSW5zdGFuY2VJRCAtIHRoZSBpbnRlcm5hbCwgUHJvdGVnZSBuYW1lIG9mIHRoZSBpbnN0YW5jZQogICAgIAogICAgICAgIHJldHVybnMgYSByZWZlcmVuY2UgdG8gdGhlIGZvdW5kIGluc3RhbmNlIG9yIE5vbmUgaWYgbm90IGZvdW5kCiAgICAgICAgCiAgICAgICAgMjAuMTEuMjAxMiBKV0MKICAgICIiIgogICAgYW5JbnN0YW5jZSA9IE5vbmUKICAgIGlmIHRoZUluc3RhbmNlSUQgIT0gTm9uZSBhbmQgbGVuKHRoZUluc3RhbmNlSUQpID4gMDoKICAgICAgICBhbkluc3RhbmNlID0ga2IuZ2V0SW5zdGFuY2UodGhlSW5zdGFuY2VJRCkKICAgICAgICAKICAgIHJldHVybiBhbkluc3RhbmNlCiMKCmRlZiBGaW5kRXNzZW50aWFsSW5zdGFuY2VCeUV4dGVybmFsUmVmKHRoZUNsYXNzLCB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lLCB0aGVFeHRlcm5hbElEKToKICAgICIiIiBGaW5kIHRoZSBFc3NlbnRpYWwgaW5zdGFuY2Ugb2YgdGhlIHNwZWNpZmllZCBjbGFzcyBpbiB0aGUgcmVwb3NpdG9yeSwgdGhhdCBoYXMKICAgICAgICB0aGUgc3BlY2lmaWVkIGV4dGVybmFsIHJlZmVyZW5jZS4KICAgICAgICAKICAgICAgICB0aGVDbGFzcyAtIHRoZSBjbGFzcyBvZiB0aGUgcmVxdWlyZWQgaW5zdGFuY2UKICAgICAgICB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lIC0gdGhlIGV4dGVybmFsIHJlcG9zaXRvcnkgbmFtZSB0aGF0IGNvbnRhaW5zIHRoZSBleHRlcm5hbCBJRAogICAgICAgIHRoZUV4dGVybmFsSUQgLSB0aGUgSUQgb2YgdGhlIHJlcXVpcmVkIGluc3RhbmNlIGluIHRoZSBzcGVjaWZpZWQgZXh0ZXJuYWwgc291cmNlIHJlcG9zaXRvcnkKICAgICAgICAKICAgICAgICByZXR1cm5zIGEgcmVmZXJlbmNlIHRvIHRoZSBmb3VuZCBpbnN0YW5jZSBvciBOb25lIGlmIG5vdCBmb3VuZAogICAgICAgIDIwLjExLjIwMTIgSldDCiAgICAgICAgMjYuMDIuMjAyMCBKV0MgdXBkYXRlZCB0byB1c2UgdGhlIGdldFJlZmVyZW5jZWRJbnN0YW5jZSgpIGFwcHJvYWNoIGlmIGF2YWlsYWJsZQogICAgICAgIDI3LjAyLjIwMjAgSldDIHVwZGF0ZWQgYWdhaW4gdG8gZHJvcCB0aGUgYWJvdmUgYW5kIGp1c3QgdXNlIHRoZSBzbG90LiBFdmVuIGZhc3RlcgogICAgIiIiCiAgICAjCiAgICBhbkV4dGVybmFsUmVmID0gTm9uZQogICAgYW5JbnN0YW5jZSA9IE5vbmUKICAgIGFuRXh0ZXJuYWxSZXBvcyA9IEdldEluc3RhbmNlT2ZDbGFzcygiRXh0ZXJuYWxfUmVwb3NpdG9yeSIsIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUpCiAgICBhbkV4dGVybmFsUmVmZXJlbmNlSURMaXN0ID0ga2IuZ2V0RnJhbWVzV2l0aFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX2luc3RhbmNlX3JlZmVyZW5jZSIpLCBOb25lLCAwLCB0aGVFeHRlcm5hbElEKQogICAgaWYgYW5FeHRlcm5hbFJlZmVyZW5jZUlETGlzdC5zaXplKCkgPiAwOgogICAgICAgIGFuSW5zdGFuY2VMaXN0ID0gZmlsdGVyKGxhbWJkYSB4OiB4LmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X3JlZmVyZW5jZSIpKSA9PSBhbkV4dGVybmFsUmVwb3MsIGFuRXh0ZXJuYWxSZWZlcmVuY2VJRExpc3QpCiAgICAgICAgaWYgbGVuKGFuSW5zdGFuY2VMaXN0KSA+IDA6CiAgICAgICAgICAgIGFuRXh0ZXJuYWxSZWYgPSBhbkluc3RhbmNlTGlzdFswXQogICAgICAgICAgICAKICAgICAgICAgICAgIyBHb3QgdGhlIGV4dGVybmFsIHJlZmVyZW5jZSBvYmplY3QuIE5vdyBmaW5kIGluc3RhbmNlIHRvIHdoaWNoIHRoaXMgaXMgYXNzb2NpYXRlZAogICAgICAgICAgICAjIElmIHRoZSByZWZlcmVuY2VkX2luc3RhbmNlIHNsb3QgaXMgYXZhaWxhYmxlLCB1c2UgdGhhdCB0byBmaW5kIHRoZSBpbnN0YW5jZQogICAgICAgICAgICBpZiBrYi5nZXRTbG90KCdyZWZlcmVuY2VkX2luc3RhbmNlJykgIT0gTm9uZToKICAgICAgICAgICAgICAgIGFuSW5zdGFuY2UgPSBhbkV4dGVybmFsUmVmLmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCdyZWZlcmVuY2VkX2luc3RhbmNlJykpCiAgICAgICAgICAgICAgICBVcGRhdGVFeHRlcm5hbFJlZmVyZW5jZUlEKGFuRXh0ZXJuYWxSZWYpCiAgICAgICAgICAgICMgZWxzZSB1c2UgdGhlIG9sZCBhcHByb2FjaAogICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgYW5JbnN0TGlzdCA9IHRoZUNsYXNzLmdldERpcmVjdEluc3RhbmNlcygpCiAgICAgICAgICAgICAgICBhbkluc3RhbmNlU2V0ID0gZmlsdGVyKGxhbWJkYSB4OiB4LmdldERpcmVjdE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X2luc3RhbmNlX3JlZmVyZW5jZSIpKSA9PSBhbkV4dGVybmFsUmVmLCBhbkluc3RMaXN0KQogICAgICAgICAgICAgICAgaWYgbGVuKGFuSW5zdGFuY2VTZXQpID4gMDoKICAgICAgICAgICAgICAgICAgICBhbkluc3RhbmNlID0gYW5JbnN0YW5jZVNldFswXQogICAgICAgICAgICAgICAgICAgIFVwZGF0ZUV4dGVybmFsUmVmZXJlbmNlSUQoYW5FeHRlcm5hbFJlZikKCiAgICAjICAgICAgICAgICAgICAgCiAgICByZXR1cm4gYW5JbnN0YW5jZQogICAgCiMKZGVmIEZpbmRFc3NlbnRpYWxJbnN0YW5jZUJ5TmFtZSh0aGVDbGFzcywgdGhlSW5zdGFuY2VOYW1lKToKICAgICIiIiBGaW5kIHRoZSBFc3NlbnRpYWwgaW5zdGFuY2Ugb2YgdGhlIHNwZWNpZmllZCBjbGFzcyBpbiB0aGUgcmVwb3NpdG9yeSB0aGF0IGhhcwogICAgICAgIGEgbmFtZSB0aGF0IGV4YWN0bHkgbWF0Y2hlcyB0aGUgc3BlY2lmaWVkIG5hbWUKICAgICAgICAKICAgICAgICB0aGVDbGFzcyAtIHRoZSBjbGFzcyBvZiB0aGUgcmVxdWlyZWQgaW5zdGFuY2UKICAgICAgICB0aGVJbnN0YW5jZSAtIHRoZSBuYW1lIG9mIHRoZSBpbnN0YW5jZSB0byBmaW5kCiAgICAgICAgCiAgICAgICAgcmV0dXJucyBhIHJlZmVyZW5jZSB0byB0aGUgZm91bmQgaW5zdGFuY2Ugb3IgTm9uZSBpZiBub3QgZm91bmQKICAgICAgICAKICAgICAgICAyMC4xMS4yMDEyIEpXQwogICAgIiIiCiAgICBhbkluc3RhbmNlID0gTm9uZSAKICAgIGlmIHRoZUluc3RhbmNlTmFtZSAhPSBOb25lOgogICAgICAgIGFuSW5zdGFuY2UgPSBHZXRJbnN0YW5jZU9mQ2xhc3ModGhlQ2xhc3MuZ2V0TmFtZSgpLCB0aGVJbnN0YW5jZU5hbWUuc3RyaXAoKSkKICAgCiAgICByZXR1cm4gYW5JbnN0YW5jZQojCmRlZiBBZGRFeHRlcm5hbFJlZmVyZW5jZUlEKHRoZUluc3RhbmNlLCB0aGVFeHRlcm5hbElELCB0aGVFeHRlcm5hbFJlcG9zaXRvcnkpOgogICAgIiIiIEFkZCB0aGUgc3BlY2lmaWVkIGV4dGVybmFsIHJlcG9zaXRvcnkgaW5zdGFuY2UgcmVmZXJlbmNlIHRvIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UKICAgIAogICAgICAgIHRoZUluc3RhbmNlIC0gdGhlIFByb3RlZ2UgaW5zdGFuY2UgdG8gd2hpY2ggdGhlIGV4dGVybmFsIHJlZmVyZW5jZSBzaG91bGQgYmUgY3JlYXRlZCBhbmQgYWRkZWQKICAgICAgICB0aGVFeHRlcm5hbElEIC0gdGhlIElEIGZyb20gdGhlIGV4dGVybmFsIHJlcG9zaXRvcnkgZm9yIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UKICAgICAgICB0aGVFeHRlcm5hbFJlcG9zaXRvcnkgLSB0aGUgZXh0ZXJuYWwgcmVwb3NpdG9yeSB0byB3aGljaCB0aGUgZXh0ZXJuYWwgSUQgYmVsb25ncwogICAgICAgIAogICAgICAgIDIwLjExLjIwMTIgSldDCiAgICAiIiIKICAgIGFuRXh0ZXJuYWxSZWYgPSBjcmVhdGVFeHRlcm5hbFJlZkluc3QodGhlRXh0ZXJuYWxSZXBvc2l0b3J5LCB0aGVFeHRlcm5hbElEKQogICAgdGhlSW5zdGFuY2UuYWRkT3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfaW5zdGFuY2VfcmVmZXJlbmNlIiksIGFuRXh0ZXJuYWxSZWYpCiMKIwpkZWYgRmluZEV4dGVybmFsUmVmZXJlbmNlSUQodGhlSW5zdGFuY2UsIHRoZUV4dGVybmFsSUQsIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUpOgogICAgIiIiIEZpbmQgdGhlIHNwZWNpZmllZCBleHRlcm5hbCByZWZlcmVuY2UgZm9yIHRoZSBJbnN0YW5jZSB3aXRoIHRoZSBzcGVjaWZpZWQgZXh0ZXJuYWwgSUQgb24gdGhlCiAgICAgICAgc3BlY2lmaWVkIGV4dGVybmFsIHJlcG9zaXRvcnkgb3IgcmV0dXJuIE5vbmUKICAgIAogICAgICAgIHRoZUluc3RhbmNlIC0gdGhlIGluc3RhbmNlIHRvIHdoaWNoIHRoZSBleHRlcm5hbCBJRCByZWxhdGVzCiAgICAgICAgdGhlRXh0ZXJuYWxJRCAtIHRoZSBJRCBvZiB0aGlzIGluc3RhbmNlIGluIHRoZSBleHRlcm5hbCByZXBvc2l0b3J5CiAgICAgICAgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSAtIHRoZSBleHRlcm5hbCBzb3VyY2UgcmVwb3NpdG9yeSBmcm9tIHdoaWNoIHRoZSBpbnN0YW5jZSBpcyBiZWluZyBpbXBvcnRlZAogICAgCiAgICAgICAgcmV0dXJucyBhIHJlZmVyZW5jZSB0aGUgZXh0ZXJuYWwgcmVwb3NpdG9yeSBvYmplY3Qgb3IgTm9uZSBpZiBub3QgZm91bmQuCiAgICAgICAgCiAgICAgICAgMjEuMTEuMjAxMiBKV0MKICAgICIiIgogICAgYW5FeHRlcm5hbFJlZiA9IE5vbmUKICAgIGFuRXh0ZXJuYWxSZXBvcyA9IGdldEV4dGVybmFsUmVwb3NpdG9yeSh0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lKQogICAgCiAgICBhbkV4dGVybmFsUmVmTGlzdCA9IHRoZUluc3RhbmNlLmdldERpcmVjdE93blNsb3RWYWx1ZXMoa2IuZ2V0U2xvdCgiZXh0ZXJuYWxfcmVwb3NpdG9yeV9pbnN0YW5jZV9yZWZlcmVuY2UiKSkKICAgIGFSZWYgPSBmaWx0ZXIobGFtYmRhIHg6IHguZ2V0RGlyZWN0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3JlcG9zaXRvcnlfcmVmZXJlbmNlIikpID09IGFuRXh0ZXJuYWxSZXBvcywgYW5FeHRlcm5hbFJlZkxpc3QpCiAgICBpZiBsZW4oYVJlZikgPiAwOgogICAgICAgIGFuRXh0ZXJuYWxSZWYgPSBhUmVmWzBdCiAgICAKICAgIHJldHVybiBhbkV4dGVybmFsUmVmCiAgICAgICAgICAgIAojCmRlZiBVcGRhdGVFeHRlcm5hbFJlZmVyZW5jZUlEKHRoZUV4dGVybmFsUmVwb3NpdG9yeVJlZik6CiAgICAiIiIgVXBkYXRlIHRoZSB0aW1lc3RhbXAgb24gdGhlIHNwZWNpZmllZCBleHRlcm5hbCByZXBvc2l0b3J5IHJlZmVyZW5jZQogICAgCiAgICAgICAgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5UmVmIC0gdGhlIGV4dGVybmFsIHJlcG9zaXRvcnkgcmVmZXJlbmNlIHRvIHVwZGF0ZS4KICAgICAgICAKICAgICAgICAyMS4xMS4yMDEyIEpXQwogICAgIiIiCiAgICB0aGVFeHRlcm5hbFJlcG9zaXRvcnlSZWYuc2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoImV4dGVybmFsX3VwZGF0ZV9kYXRlIiksIHRpbWVzdGFtcCgpKQogICAgCiMKZGVmIFVwZGF0ZUVzc2VudGlhbEluc3RhbmNlTmFtZSh0aGVJbnN0YW5jZSwgdGhlSW5zdGFuY2VOYW1lKToKICAgICIiIiBVcGRhdGUgdGhlIG5hbWUgb2YgdGhlIHNwZWNpZmllZCBpbnN0YW5jZSB0byB1c2UgdGhlIG5ldyBuYW1lIHNwZWNpZmllZAogICAgICAgIGJ1dCBvbmx5IGlmIHRoZSBuYW1lcyBkbyBub3QgbWF0Y2gKICAgICAgICAKICAgICAgICB0aGVJbnN0YW5jZSAtIHRoZSBpbnN0YW5jZSB0byBiZSB1cGRhdGVkCiAgICAgICAgdGhlSW5zdGFuY2VOYW1lIC0gdGhlIG5ldyBuYW1lIHRvIHVzZQogICAgICAgIAogICAgICAgIDIxLjExLjIwMTIgSldDCiAgICAiIiIKICAgIGlmIHRoZUluc3RhbmNlICE9IE5vbmU6CiAgICAgICAgaWYgKHRoZUluc3RhbmNlTmFtZSAhPSBOb25lKSBhbmQgKGxlbih0aGVJbnN0YW5jZU5hbWUpID4gMCk6CiAgICAgICAgICAgIHRoZUluc3RhbmNlLnNldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIiksIHRoZUluc3RhbmNlTmFtZSkKIwoKZGVmIFVwZGF0ZU9yQWRkRXh0ZXJuYWxSZWYodGhlSW5zdGFuY2UsIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUsIHRoZUV4dGVybmFsSUQpOgogICAgIiIiIEZpbmQgdGhlIGNvcnJlY3QgRXh0ZXJuYWwgcmVmZXJlbmNlIGZvciB0aGUgc3BlY2lmaWVkIGluc3RhbmNlIGluIHRoZSBzcGVjaWZpZWQKICAgICAgICByZXBvc2l0b3J5IHdpdGggdGhlIHNwZWNpZmllZCBJRCBhbmQgdXBkYXRlIGl0LiBJZiBubyBzdWNoIGV4dGVybmFsIGluc3RhbmNlIHJlZmVyZW5jZQogICAgICAgIGV4aXN0cywgY3JlYXRlIGl0CiAgICAgICAgCiAgICAgICAgdGhlSW5zdGFuY2UgLSB0aGUgaW5zdGFuY2UgZm9yIHdoaWNoIHRoZSBleHRlcm5hbCByZWZlcmVuY2Ugc2hvdWxkIGJlIHVwZGF0ZWQgb3IgYWRkZWQKICAgICAgICB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lIC0gdGhlIG5hbWUgb2YgdGhlIGV4dGVybmFsIHJlcG9zaXRvcnkKICAgICAgICB0aGVFeHRlcm5hbElEIC0gdGhlIGV4dGVybmFsIElEIGluIHRoZSBleHRlcm5hbCByZXBvc2l0b3J5IGZvciB0aGUgaW5zdGFuY2UKICAgICAgICAKICAgICAgICAyMS4xMS4yMDEyIEpXQwogICAgIiIiCiAgICBpZiB0aGVJbnN0YW5jZSAhPSBOb25lOgogICAgICAgIGFuRXh0ZXJuYWxSZXBvc1JlZiA9IEZpbmRFeHRlcm5hbFJlZmVyZW5jZUlEKHRoZUluc3RhbmNlLCB0aGVFeHRlcm5hbElELCB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lKQogICAgICAgIGlmIGFuRXh0ZXJuYWxSZXBvc1JlZiAhPSBOb25lOiAgICAgICAgICAgIAogICAgICAgICAgICBVcGRhdGVFeHRlcm5hbFJlZmVyZW5jZUlEKGFuRXh0ZXJuYWxSZXBvc1JlZikKICAgICAgICBlbHNlOgogICAgICAgICAgICBBZGRFeHRlcm5hbFJlZmVyZW5jZUlEKHRoZUluc3RhbmNlLCB0aGVFeHRlcm5hbElELCB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lKQojCgpkZWYgUHJvY2Vzc0ZvdW5kSW5zdGFuY2UodGhlSW5zdGFuY2UsIHRoZUluc3RhbmNlTmFtZSwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSwgdGhlRXh0ZXJuYWxJRCk6CiAgICAiIiIgUHJvY2VzcyBhbiBFc3NlbnRpYWwgaW5zdGFuY2UgdGhhdCBoYXMgYmVlbiBmb3VuZCBieSB1cGRhdGluZyB0aGUgcmVsZXZhbnQgZXh0ZXJuYWwgcmVwb3NpdG9yeSBpbnN0YW5jZQogICAgICAgIHJlZmVyZW5jZS4gSWYgdGhlSW5zdGFuY2VOYW1lIGNvbnRhaW5zIGEgbm9uLWVtcHR5IHZhbHVlLCBjaGFuZ2UgdGhlIEVzc2VudGlhbCBuYW1lIHNsb3QgdmFsdWUKICAgICAgICBmb3IgdGhlSW5zdGFuY2UKICAgICAgICAKICAgICAgICB0aGVJbnN0YW5jZSAtIHRoZSBFc3NlbnRpYWwgaW5zdGFuY2UgdG8gcHJvY2VzcwogICAgICAgIHRoZUluc3RhbmNlTmFtZSAtIHRoZSBuZXcvdXBkYXRlZCBuYW1lIGZvciB0aGUgaW5zdGFuY2UuIFNldHMgdGhlIEVzc2VudGlhbCBNZXRhIE1vZGVsIG5hbWUgc2xvdAogICAgICAgIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgZXh0ZXJuYWwgc291cmNlIHJlcG9zaXRvcnkKICAgICAgICB0aGVFeHRlcm5hbElEIC0gdGhlIElEIHRoYXQgdGhlIHNwZWNpZmllZCBpbnN0YW5jZSBoYXMgaW4gdGhlIGV4dGVybmFsIHNvdXJjZSByZXBvc2l0b3J5CiAgICAgICAgCiAgICAgICAgMjEuMTEuMjAxMiBKV0MgICAgICAgCiAgICAiIiIKICAgIGlmIHRoZUluc3RhbmNlICE9IE5vbmU6CiAgICAgICAgIyBVcGRhdGUgdGhlIGV4dGVybmFsIHJlZmVyZW5jZSBpbnN0YW5jZSBmb3IgdGhlIGluc3RhbmNlCiAgICAgICAgVXBkYXRlT3JBZGRFeHRlcm5hbFJlZih0aGVJbnN0YW5jZSwgdGhlRXh0ZXJuYWxSZXBvc2l0b3J5TmFtZSwgdGhlRXh0ZXJuYWxJRCkKICAgICAgICAKICAgICAgICAjIElmIHRoZUluc3RhbmNlTmFtZSBpcyBwb3B1bGF0ZWQgKG5vdCBOb25lIG9yICIiKSBjaGFuZ2UgdGhlIG5hbWUgb2YgdGhlSW5zdGFuY2UKICAgICAgICBpZiAodGhlSW5zdGFuY2VOYW1lICE9IE5vbmUpIGFuZCAobGVuKHRoZUluc3RhbmNlTmFtZSkgPiAwKToKICAgICAgICAgICAgVXBkYXRlRXNzZW50aWFsSW5zdGFuY2VOYW1lKHRoZUluc3RhbmNlLCB0aGVJbnN0YW5jZU5hbWUpCiMKIyBHZXQgYW4gZXhpc3Rpbmcgb3IgbmV3IEFjdG9yIFRvIFJvbGUgcmVsYXRpb24gZm9yIHRoZSBzcGVjaWZpZWQgQWN0b3IgYW5kIFJvbGUKZGVmIEdldEFjdG9yVG9Sb2xlKHRoZUFjdG9yLCB0aGVSb2xlLCB0aGVFeHRSZXBvcyk6CiAgICAiIiIgR2V0IGFuIGV4aXN0aW5nIG9yIG5ldyBBY3RvciBUbyBSb2xlIHJlbGF0aW9uIGZvciB0aGUgc3BlY2lmaWVkIEFjdG9yIGFuZCBSb2xlCiAgICAKICAgICAgICB0aGVBY3RvciAtIHRoZSBBY3RvciBpbnN0YW5jZSB0byBhZGQgdG8gdGhlIHJvbGUKICAgICAgICB0aGVSb2xlIC0gdGhlIFJvbGUgdGhhdCB0aGUgQWN0b3IgaXMgdG8gcGxheQogICAgICAgIHRoZUV4dFJlcG9zIC0gdGhlIG5hbWUgb2YgdGhlIEV4dGVybmFsIHJlcG9zaXRvcnkgZnJvbSB3aGljaCB0aGUgYWN0b3JzIGFuZCByb2xlcyBhcmUgYmVpbmcKICAgICAgICAgICAgICAgICAgICAgIGltcG9ydGVkLgogICAgCiAgICAgICAgcmV0dXJucyB0aGUgcmVsZXZhbnQgQWN0b3JUb1JvbGUgcmVsYXRpb24gb3IgTm9uZSBpZiBBY3RvciBvciBSb2xlIGlzIGludmFsaWQKICAgICIiIgogICAgYW5BY3RUb1JvbGUgPSBOb25lCiAgICBpZiAodGhlQWN0b3IgIT0gTm9uZSkgYW5kICh0aGVSb2xlICE9IE5vbmUpOgogICAgICAgIGFuQWN0b3JOYW1lID0gdGhlQWN0b3IuZ2V0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoIm5hbWUiKSkKICAgICAgICBhUm9sZU5hbWUgPSB0aGVSb2xlLmdldE93blNsb3RWYWx1ZShrYi5nZXRTbG90KCJuYW1lIikpCiAgICAgICAgYW5BY3RUb1JvbGVOYW1lID0gYW5BY3Rvck5hbWUgKyAiIGFzICIgKyBhUm9sZU5hbWUKICAgICAgICBhbkFjdFRvUm9sZSA9IEVzc2VudGlhbEdldEluc3RhbmNlKCJBQ1RPUl9UT19ST0xFX1JFTEFUSU9OIiwgIiIsIGFuQWN0VG9Sb2xlTmFtZSwgYW5BY3RUb1JvbGVOYW1lLCB0aGVFeHRSZXBvcykKICAgICAgICBhZGRJZk5vdFRoZXJlKGFuQWN0VG9Sb2xlLCAiYWN0X3RvX3JvbGVfZnJvbV9hY3RvciIsIHRoZUFjdG9yKSAgICAgICAgCiAgICAgICAgYWRkSWZOb3RUaGVyZShhbkFjdFRvUm9sZSwgImFjdF90b19yb2xlX3RvX3JvbGUiLCB0aGVSb2xlKQogICAgICAgICAgICAKICAgIHJldHVybiBhbkFjdFRvUm9sZQojCgojIEZ1bmN0aW9ucyB0byBhZGQgQ2xhc3MgaW5zdGFuY2VzIGFuZCBTbG90IGluc3RhbmNlcyB0byBTbG90cyBvbiBhbiBpbnN0YW5jZQpkZWYgYWRkQ2xhc3NUb1Nsb3QodGhlSW5zdGFuY2UsIHRoZVNsb3ROYW1lLCB0aGVDbGFzc05hbWUpOgogICAgIiIiIEFkZCBhIENsYXNzIGluc3RhbmNlIHRvIGEgU2xvdCBvbiB0aGUgc3BlY2lmaWVkIGluc3RhbmNlLCB3aGVyZSB0aGUgU2xvdCB0YWtlcyBhIENsYXNzIHR5cGUuCiAgICAKICAgICAgICB0aGVJbnN0YW5jZSAtIHRoZSBpbnN0YW5jZSBvbiB3aGljaCB0byBzZXQgdGhlIHNsb3QKICAgICAgICB0aGVTbG90TmFtZSAtIHRoZSBzbG90IHRvIHdoaWNoIHRoZSBDbGFzcyBzaG91bGQgYmUgYWRkZWQKICAgICAgICB0aGVDbGFzc05hbWUgLSB0aGUgbmFtZSBvZiB0aGUgQ2xhc3MgaW5zdGFuY2UgdG8gYWRkIHRvIHRoZSBzbG90CiAgICAiIiIKICAgIGlmIHRoZUluc3RhbmNlID09IE5vbmU6CiAgICAgICAgcmV0dXJuCiAgICAKICAgIGFDbHMgPSBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKQogICAgYWRkSWZOb3RUaGVyZSh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUsIGFDbHMpCiAgICAKZGVmIGFkZFNsb3RUb1Nsb3QodGhlSW5zdGFuY2UsIHRoZVNsb3ROYW1lLCB0aGVTbG90SW5zdGFuY2VOYW1lKToKICAgICIiIiBBZGQgYSBTbG90IGluc3RhbmNlIHRvIGEgU2xvdCBvbiB0aGUgc3BlY2lmaWVkLCB3aGVyZSB0aGUgU2xvdCB0YWtlcyBhIFNsb3QgdHlwZQogICAgCiAgICAgICAgdGhlSW5zdGFuY2UgLSB0aGUgaW5zdGFuY2Ugb24gd2hpY2ggdG8gc2V0IHRoZSBzbG90CiAgICAgICAgdGhlU2xvdE5hbWUgLSB0aGUgc2xvdCB0byB3aGljaCB0aGUgQ2xhc3Mgc2hvdWxkIGJlIGFkZGVkCiAgICAgICAgdGhlU2xvdEluc3RhbmNlTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBTbG90IGluc3RhbmNlIHRvIGFkZCB0byB0aGUgc2xvdAogICAgIiIiCiAgICBpZiB0aGVJbnN0YW5jZSA9PSBOb25lOgogICAgICAgIHJldHVybgogICAgICAgIAogICAgYVNsb3QgPSBrYi5nZXRTbG90KHRoZVNsb3RJbnN0YW5jZU5hbWUpCiAgICBhZGRJZk5vdFRoZXJlKHRoZUluc3RhbmNlLCB0aGVTbG90TmFtZSwgYVNsb3QpCgoKIyBGaW5kIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UgaW4gdGhlIHNwZWNpZmllZCBzbG90IG9mIHRoZVJlbGF0ZWRJbnN0bmFjZSBhbmQgcmVtb3ZlIGlmIHRoZXJlLgpkZWYgZmluZEFuZFJlbW92ZUluc3RhbmNlRnJvbVNsb3QodGhlSW5zdGFuY2VUb1JlbW92ZSwgdGhlUmVsYXRlZEluc3RhbmNlLCB0aGVTbG90KToKICAgIGlmICh0aGVSZWxhdGVkSW5zdGFuY2UgIT0gTm9uZSkgYW5kICh0aGVTbG90ICE9IE5vbmUpOgogICAgICAgIGFuSW5zdExpc3QgPSB0aGVSZWxhdGVkSW5zdGFuY2UuZ2V0T3duU2xvdFZhbHVlcyh0aGVTbG90KQogICAgICAgIGlmIGFuSW5zdExpc3QgIT0gTm9uZToKICAgICAgICAgICAgaWYgYW5JbnN0TGlzdC5jb250YWlucyh0aGVJbnN0YW5jZVRvUmVtb3ZlKToKICAgICAgICAgICAgICAgIHRoZVJlbGF0ZWRJbnN0YW5jZS5yZW1vdmVPd25TbG90VmFsdWUodGhlU2xvdCwgdGhlSW5zdGFuY2VUb1JlbW92ZSkKICAgICAgICAgICAgICAgIAojIFJlbW92ZSBzcGVjaWZpZWQgaW5zdGFuY2UgZnJvbSBhbGwgYXJjaGl0ZWN0dXJlIHN0YXRlcwpkZWYgcmVtb3ZlSW5zdGFuY2VGcm9tU3RhdGVzKHRoZUluc3RhbmNlKToKICAgICMgRG8gdGhpcyBmcm9tIHRoZSBzdGF0ZSBlbmQgb2YgdGhpbmdzIC0gYSBiaXQgYnJ1dGUgZm9yY2UgYnV0IHByb2JhYmx5IHNhZmVyCiAgICBhU3RhdGVMaXN0ID0ga2IuZ2V0Q2xzKCJBcmNoaXRlY3R1cmVfU3RhdGUiKS5nZXREaXJlY3RJbnN0YW5jZXMoKQogICAgZm9yIGFTdGF0ZSBpbiBhU3RhdGVMaXN0OgogICAgICAgICMgTG9vayBmb3IgdGhlIGluc3RhbmNlIGluIGVhY2ggc3RhdGUgc2xvdCBhbmQgcmVtb3ZlIGlmIGl0J3MgdGhlcmUgICAgICAgIAogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfYXBwbGljYXRpb25fY29uY2VwdHVhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfYXBwbGljYXRpb25fbG9naWNhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfYXBwbGljYXRpb25fcGh5c2ljYWwiKSkKICAgICAgICBmaW5kQW5kUmVtb3ZlSW5zdGFuY2VGcm9tU2xvdCh0aGVJbnN0YW5jZSwgYVN0YXRlLCBrYi5nZXRTbG90KCJhcmNoX3N0YXRlX2FwcGxpY2F0aW9uX3JlbGF0aW9ucyIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfYnVzaW5lc3NfY29uY2VwdHVhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfYnVzaW5lc3NfbG9naWNhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfYnVzaW5lc3NfcGh5c2ljYWwiKSkKICAgICAgICBmaW5kQW5kUmVtb3ZlSW5zdGFuY2VGcm9tU2xvdCh0aGVJbnN0YW5jZSwgYVN0YXRlLCBrYi5nZXRTbG90KCJhcmNoX3N0YXRlX2J1c2luZXNzX3JlbGF0aW9ucyIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfaW5mb3JtYXRpb25fY29uY2VwdHVhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfaW5mb3JtYXRpb25fbG9naWNhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfcGh5c2ljYWxfaW5mb3JtYXRpb24iKSkKICAgICAgICBmaW5kQW5kUmVtb3ZlSW5zdGFuY2VGcm9tU2xvdCh0aGVJbnN0YW5jZSwgYVN0YXRlLCBrYi5nZXRTbG90KCJhcmNoX3N0YXRlX3NlY3VyaXR5X21hbmFnZW1lbnQiKSkKICAgICAgICBmaW5kQW5kUmVtb3ZlSW5zdGFuY2VGcm9tU2xvdCh0aGVJbnN0YW5jZSwgYVN0YXRlLCBrYi5nZXRTbG90KCJhcmNoX3N0YXRlX3RlY2hub2xvZ3lfY29uY2VwdHVhbCIpKQogICAgICAgIGZpbmRBbmRSZW1vdmVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCBhU3RhdGUsIGtiLmdldFNsb3QoImFyY2hfc3RhdGVfdGVjaG5vbG9neV9sb2dpY2FsIikpCiAgICAgICAgZmluZEFuZFJlbW92ZUluc3RhbmNlRnJvbVNsb3QodGhlSW5zdGFuY2UsIGFTdGF0ZSwga2IuZ2V0U2xvdCgiYXJjaF9zdGF0ZV90ZWNobm9sb2d5X3BoeXNpY2FsIikpCiAgICAgICAgZmluZEFuZFJlbW92ZUluc3RhbmNlRnJvbVNsb3QodGhlSW5zdGFuY2UsIGFTdGF0ZSwga2IuZ2V0U2xvdCgiYXJjaF9zdGF0ZV90ZWNobm9sb2d5X3JlbGF0aW9ucyIpKSAgICAgICAgCgogICAgICAgIAoKZGVmIGRlbGV0ZUluc3RhbmNlKHRoZUluc3RhbmNlKToKICAgICIiIiBEZWxldGUgdGhlIHNwZWNpZmllZCBpbnN0YW5jZSBmcm9tIHRoZSBLQgogICAgCiAgICAgICAgdGhlSW5zdGFuY2UgLSB0aGUgaW5zdGFuY2UgdG8gZGVsZXRlCiAgICAiIiIKICAgIGlmIHRoZUluc3RhbmNlICE9IE5vbmU6CiAgICAgICAgIyBSZW1vdmUgZnJvbSBUYXhvbm9taWVzCiAgICAgICAgYVNsb3QgPSBrYi5nZXRTbG90KCJlbGVtZW50X2NsYXNzaWZpZWRfYnkiKQogICAgICAgIGFDbGFzc2lmaWVkTGlzdCA9IHRoZUluc3RhbmNlLmdldE93blNsb3RWYWx1ZXMoYVNsb3QpCiAgICAgICAgZm9yIGFUYXggaW4gYUNsYXNzaWZpZWRMaXN0OgogICAgICAgICAgICB0aGVJbnN0YW5jZS5yZW1vdmVPd25TbG90VmFsdWUoYVNsb3QsIGFUYXgpCiAgICAgICAgICAgIAogICAgICAgICMgUmVtb3ZlIGZyb20gQXJjaGl0ZWN0dXJlIFN0YXRlcwogICAgICAgIHJlbW92ZUluc3RhbmNlRnJvbVN0YXRlcyh0aGVJbnN0YW5jZSkKICAgICAgICAKICAgICAgICAjIFJlbW92ZSBhbnkgYXNzb2NpYXRlZCBleHRlcm5hbCByZWZlcmVuY2VzCiAgICAgICAgYVJlZlNsb3QgPSBrYi5nZXRTbG90KCJleHRlcm5hbF9yZXBvc2l0b3J5X2luc3RhbmNlX3JlZmVyZW5jZSIpCiAgICAgICAgYVJlZkxpc3QgPSB0aGVJbnN0YW5jZS5nZXRPd25TbG90VmFsdWVzKGFSZWZTbG90KQogICAgICAgIGZvciBhUmVmIGluIGFSZWZMaXN0OgogICAgICAgICAgICB0aGVJbnN0YW5jZS5yZW1vdmVPd25TbG90VmFsdWUoYVJlZlNsb3QsIGFSZWYpCiAgICAgICAgICAgIGtiLmRlbGV0ZUluc3RhbmNlKGFSZWYpCiAgICAgICAgICAgIAogICAgICAgIGtiLmRlbGV0ZUluc3RhbmNlKHRoZUluc3RhbmNlKQoKZGVmIHJlbW92ZUluc3RhbmNlRnJvbVNsb3QodGhlSW5zdGFuY2UsIHRoZVNsb3ROYW1lLCB0aGVJbnN0YW5jZVRvUmVtb3ZlKToKICAgICIiIiBSZW1vdmUgdGhlIHNwZWNpZmllZCBpbnN0YW5jZSBmcm9tIHRoZSBzbG90IG9uIHRoZUluc3RhbmNlCiAgICAKICAgICAgICB0aGVJbnN0YW5jZSAtIHRoZSBpbnN0YW5jZSB0byB1cGRhdGUsIG9uIHdoaWNoIHRoZUluc3RhbmNlVG9SZW1vdmUgc2hvdWxkIGJlIHJlbW92ZWQgZnJvbSB0aGVTbG90CiAgICAgICAgdGhlU2xvdE5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgU2xvdCBmcm9tIHdoaWNoIHRoZUluc3RhbmNlVG9SZW1vdmUgc2hvdWxkIGJlIHJlbW92ZWQKICAgICAgICB0aGVJbnN0YW5jZVRvUmVtb3ZlIC0gdGhlIGluc3RhbmNlIHRoYXQgc2hvdWxkIGJlIHJlbW92ZWQgZnJvbSB0aGVTbG90TmFtZSwgYnJlYWtpbmcgYSByZWxhdGlvbnNoaXAKICAgICAgICAKICAgICIiIgogICAgYVNsb3QgPSBrYi5nZXRTbG90KHRoZVNsb3ROYW1lKQogICAgaWYoYVNsb3QgIT0gTm9uZSk6CiAgICAgICAgZmluZEFuZFJlbW92ZUluc3RhbmNlRnJvbVNsb3QodGhlSW5zdGFuY2VUb1JlbW92ZSwgdGhlSW5zdGFuY2UsIGFTbG90KQogICAgCmRlZiBjbGVhclByaW1pdGl2ZVNsb3RWYWx1ZSh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUpOgogICAgIiIiIENsZWFyIHRoZSB2YWx1ZSBvZiB0aGUgc3BlY2lmaWVkIHByaW1pdGl2ZSBTbG90LCBpLmUuIGEgU3RyaW5nLCBJbnRlZ2VyLCBGbG9hdCwgQm9vbGVhbiwgU3ltYm9sIHNsb3QKICAgIAogICAgICAgIHRoZUluc3RhbmNlIC0gdGhlIGluc3RhbmNlIG9uIHdoaWNoIHRvIGNsZWFyIHRoZSBzcGVjaWZpZWQgc2xvdAogICAgICAgIHRoZVNsb3ROYW1lIC0gdGhlIG5hbWUgb2YgdGhlIHNsb3QgdG8gY2xlYXIKICAgICIiIgogICAgCiAgICBpZiAodGhlSW5zdGFuY2UgIT0gTm9uZSk6CiAgICAgICAgYVNsb3QgPSBrYi5nZXRTbG90KHRoZVNsb3ROYW1lKQogICAgICAgIAogICAgICAgIGlmIHRoZUluc3RhbmNlLmdldE93blNsb3RWYWx1ZVR5cGUoYVNsb3QpID09IFZhbHVlVHlwZS5GTE9BVDoKICAgICAgICAgICAgdGhlSW5zdGFuY2Uuc2V0T3duU2xvdFZhbHVlKGFTbG90LCBOb25lKQogICAgICAgIGVsc2U6CiAgICAgICAgICAgIGFDdXJyZW50T2JqZWN0ID0gdGhlSW5zdGFuY2UuZ2V0RGlyZWN0T3duU2xvdFZhbHVlKGFTbG90KQogICAgICAgICAgICBpZihhQ3VycmVudE9iamVjdCAhPSBOb25lKToKICAgICAgICAgICAgICAgIHRoZUluc3RhbmNlLnJlbW92ZU93blNsb3RWYWx1ZShhU2xvdCwgYUN1cnJlbnRPYmplY3QpCgoKZGVmIGRlbGV0ZUluc3RhbmNlSWZFbXB0eVNsb3RzKHRoZUluc3RhbmNlLCB0aGVTbG90TGlzdCk6CiAgICAiIiIKICAgICAgICBEZWxldGUgdGhlIHNwZWNpZmllZCBpbnN0YW5jZSBidXQgb25seSBpZiB0aGVyZSBhcmUgbm8gdmFsdWVzIGluIHRoZSBzbG90cwogICAgICAgIGRlZmluZWQgaW4gdGhlU2xvdExpc3QKICAgICAgICAKICAgICAgICB0aGVJbnN0YW5jZSAtIHRoZSBpbnN0YW5jZSB0byBkZWxldGUKICAgICAgICB0aGVTbG90TGlzdCAtIGEgbGlzdCBvZiBzbG90IG5hbWVzIHRvIGNoZWNrIGZvciBlbXB0eSB2YWx1ZXMKICAgICAgICAKICAgICIiIgogICAgaXNWYWx1ZUluU2xvdCA9IEZhbHNlCiAgICAKICAgIGlmKHRoZUluc3RhbmNlICE9IE5vbmUpOgogICAgICAgIGlmKHRoZVNsb3RMaXN0ICE9IE5vbmUpOgogICAgCiAgICAgICAgICAgIGZvciBhU2xvdCBpbiB0aGVTbG90TGlzdDoKICAgICAgICAgICAgICAgIGlmIChhU2xvdCAhPSBOb25lKSBhbmQgKGxlbihhU2xvdCkgPiAgMCk6CiAgICAgICAgICAgICAgICAgICAgYVZhbHVlID0gdGhlSW5zdGFuY2UuZ2V0RGlyZWN0T3duU2xvdFZhbHVlKGtiLmdldFNsb3QoYVNsb3QpKSAgICAKICAgICAgICAgICAgICAgICAgICBpZihhVmFsdWUgIT0gTm9uZSk6CiAgICAgICAgICAgICAgICAgICAgICAgIGlzVmFsdWVJblNsb3QgPSBUcnVlCiAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrCiAgICAgICAgCiAgICAgICAgaWYobm90KGlzVmFsdWVJblNsb3QpKToKICAgICAgICAgICAgZGVsZXRlSW5zdGFuY2UodGhlSW5zdGFuY2UpCiAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgIAoKZGVmIEVzc2VudGlhbERlbGV0ZUluc3RhbmNlKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VJRCwgdGhlSW5zdGFuY2VOYW1lLCB0aGVFeHRlcm5hbElELCB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lLCB0aGVTbG90TGlzdD1Ob25lKToKICAgICIiIiBHZXQgYW5kIHRoZW4gZGVsZXRlIHRoZSBFc3NlbnRpYWwgaW5zdGFuY2UgZnJvbSB0aGUgY3VycmVudCByZXBvc2l0b3J5IG9mIHRoZSBzcGVjaWZpZWQgQ2xhc3MuIAogICAgICAgIEZpcnN0bHksIHRoZSByZXBvc2l0b3J5IHdpbGwgYmUgc2VhcmNoZWQgZm9yIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UgSUQgKGludGVybmFsIFByb3RlZ2UgbmFtZSkuIAogICAgICAgIElmIG5vIHN1Y2ggaW5zdGFuY2UgY2FuIGJlIGZvdW5kLCB0aGUgcmVwb3NpdG9yeSBpcyBzZWFyY2hlZCBmb3IgYW4gaW5zdGFuY2Ugd2l0aCB0aGUgc3BlY2lmaWVkIGV4dGVybmFsIAogICAgICAgIHJlcG9zaXRvcnkgaW5zdGFuY2UgcmVmZXJlbmNlLiAKICAgICAgICBJZiBubyBzdWNoIGluc3RhbmNlIGNhbiBiZSBmb3VuZCwgdGhlIHJlcG9zaXRvcnkgaXMgc2VhcmNoZWQgaXMgZm9yIGluc3RhbmNlcyBvZiB0aGUgU3BlY2lmaWVkIGNsYXNzIHRoYXQKICAgICAgICBoYXMgYSBuYW1lIHRoYXQgZXhhY3RseSAoY2FzZSBhbmQgZnVsbCBuYW1lKSBtYXRjaGVzIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UgbmFtZS4KICAgICAgICBJZiBubyBzdWNoIGluc3RhbmNlIGNhbiBiZSBmb3VuZCwgbm8gYWN0aW9uIHdpbGwgYmUgdGFrZW4uCiAgICAgICAgCiAgICAgICAgdGhlQ2xhc3NOYW1lIC0gdGhlIG5hbWUgb2YgdGhlIGNsYXNzIG9mIHRoZSBpbnN0YW5jZSB0byBmaW5kLiBTZWFyY2ggaXMgc2NvcGVkIGJ5IGNsYXNzCiAgICAgICAgdGhlSW5zdGFuY2VJRCAtIHRoZSBpbnRlcm5hbCBQcm90ZWdlIG5hbWUgLyBJRCBmb3IgdGhlIGluc3RhbmNlLiBTZXQgdG8gIiIgdG8gYnlwYXNzIHNlYXJjaCBieSBpbnN0YW5jZSBJRAogICAgICAgIHRoZUluc3RhbmNlTmFtZSAtIHRoZSBuYW1lIG9mIHRoZSBzcGVjaWZpZWQgaW5zdGFuY2UuIFdoZW4gYW4gaW5zdGFuY2UgaXMgZm91bmQgYnkgaW5zdGFuY2UgSUQgb3IgRXh0ZXJuYWwKICAgICAgICAgICAgICAgICAgICAgICAgICByZWZlcmVuY2UsIHRoaXMgcGFyYW1ldGVyIGNhbiBiZSB1c2VkIHRvIHVwZGF0ZSB0aGUgbmFtZSAoRXNzZW50aWFsIG5hbWUgc2xvdCkgb2YgdGhlIAogICAgICAgICAgICAgICAgICAgICAgICAgIGluc3RhbmNlLgogICAgICAgIHRoZUV4dGVybmFsSUQgLSB0aGUgSUQgdGhhdCB0aGUgaW5zdGFuY2UgaGFzIGluIHRoZSBzcGVjaWZpZWQgZXh0ZXJuYWwgc291cmNlIHJlcG9zaXRvcnkKICAgICAgICB0aGVFeHRlcm5hbFJlcG9zaXRvcnlOYW1lIC0gdGhlIG5hbWUgb2YgdGhlIGV4dGVybmFsIHNvdXJjZSByZXBvc2l0b3J5CiAgICAgICAgdGhlU2xvdExpc3QgLSBhIGxpc3Qgb2YgbmFtZXMgdGhhdCBkZWZpbmVzIGEgc2V0IHNsb3RzIHRoYXQgbXVzdCBiZSB0ZXN0ZWQgZm9yIGFueSB2YWx1ZXMgb24gdGhlIGluc3RhbmNlCiAgICAgICAgICAgICAgICAgICAgICAgIElmIGFueSB2YWx1ZXMgYXJlIGZvdW5kIGluIGFueSBvZiB0aGUgc2xvdHMgaW4gdGhlIGxpc3Qgb24gdGhlIGluc3RhbmNlLCB0aGUgaW5zdGFuY2Ugd2lsbCBOT1QgCiAgICAgICAgICAgICAgICAgICAgICAgIGJlIGRlbGV0ZWQuIEVtcHR5IG9yIE5vbmUgbGlzdCByZXN1bHRzIGluIGRlbGV0ZSBvZiBpbnN0YW5jZSB3aGV0aGVyIGl0IGhhcyB2YWx1ZXMgb3Igbm90IGluIGl0cyBTbG90cyAgICAgICAgCiAgICAgICAgICAgICAgICAKICAgICAgICAwOS4wNS4yMDE0IEpXQwogICAgICAgIDE2LjA1LjIwMTQgSldDIEFkZGVkIHRoZVNsb3RMaXN0CiAgICAiIiIKICAgIGFuRXNzZW50aWFsSW5zdGFuY2UgPSBOb25lCiAgICAKICAgICMgMjAuMDkuMjAxMSBKV0MgLSBNYWtlIHN1cmUgdGhhdCB0aGUgc291cmNlIGNsYXNzIGlzIGluIHRoZSB0YXJnZXJ0IHJlcG9zaXRvcnkKICAgIGFDbGFzcyA9IGtiLmdldENscyh0aGVDbGFzc05hbWUpICAgIAogICAgIyBpZiBub3QtcmVwb3J0IGEgd2FybmluZyBhbmQgc2tpcCB0aGF0IGluc3RhbmNlLgogICAgaWYgYUNsYXNzID09IE5vbmU6CiAgICAgICAgcHJpbnQgIldBUk5JTkc6IFNraXBwaW5nIGluc3RhbmNlIG9mIHVua25vd24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKICAgICAgICByZXR1cm4KICAgIAogICAgaWYgdGhlSW5zdGFuY2VJRCAhPSBOb25lOgogICAgICAgIGFuRXNzZW50aWFsSW5zdGFuY2UgPSBGaW5kRXNzZW50aWFsSW5zdGFuY2VCeUlEKHRoZUluc3RhbmNlSUQpICAgICAgICAKICAgICAgICBpZiBhbkVzc2VudGlhbEluc3RhbmNlICE9IE5vbmU6CiAgICAgICAgICAgIGRlbGV0ZUluc3RhbmNlSWZFbXB0eVNsb3RzKGFuRXNzZW50aWFsSW5zdGFuY2UsIHRoZVNsb3RMaXN0KQogICAgICAgICAgICBwcmludCAiRGVsZXRlZCBpbnN0YW5jZSB2aWEgaW5zdGFuY2UgSUQsIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICAgICAgICAgIHJldHVybgogICAgICAgICAgICAKICAgICMgSWYgbm90IGZvdW5kLCBzZWFyY2ggYnkgZXh0ZXJuYWwgcmVwb3NpdG9yeSByZWZlcmVuY2UKICAgIGlmIGFuRXNzZW50aWFsSW5zdGFuY2UgPT0gTm9uZToKICAgICAgICBhbkVzc2VudGlhbEluc3RhbmNlID0gRmluZEVzc2VudGlhbEluc3RhbmNlQnlFeHRlcm5hbFJlZihhQ2xhc3MsIHRoZUV4dGVybmFsUmVwb3NpdG9yeU5hbWUsIHRoZUV4dGVybmFsSUQpCiAgICAgICAgaWYgYW5Fc3NlbnRpYWxJbnN0YW5jZSAhPSBOb25lOgogICAgICAgICAgICBkZWxldGVJbnN0YW5jZUlmRW1wdHlTbG90cyhhbkVzc2VudGlhbEluc3RhbmNlLCB0aGVTbG90TGlzdCkKICAgICAgICAgICAgcHJpbnQgIkRlbGV0ZSBpbnN0YW5jZSB2aWEgZXh0ZXJuYWwgcmVwb3NpdG9yeSByZWZlcmVuY2UsIG9uIGNsYXNzOiAiICsgdGhlQ2xhc3NOYW1lCiAgICAgICAgICAgIHJldHVybgogICAgICAgIAogICAgICAgICMgSWYgbm90IGZvdW5kLCBzZWFyY2ggYnkgbmFtZQogICAgICAgIGlmIGFuRXNzZW50aWFsSW5zdGFuY2UgPT0gTm9uZToKICAgICAgICAgICAgYW5Fc3NlbnRpYWxJbnN0YW5jZSA9IEZpbmRFc3NlbnRpYWxJbnN0YW5jZUJ5TmFtZShhQ2xhc3MsIHRoZUluc3RhbmNlTmFtZSkgICAgICAgICAgICAKICAgICAgICAgICAgaWYgYW5Fc3NlbnRpYWxJbnN0YW5jZSAhPSBOb25lOgogICAgICAgICAgICAgICAgZGVsZXRlSW5zdGFuY2VJZkVtcHR5U2xvdHMoYW5Fc3NlbnRpYWxJbnN0YW5jZSwgdGhlU2xvdExpc3QpCiAgICAgICAgICAgICAgICBwcmludCAiRGVsZXRlZCBpbnN0YW5jZSB2aWEgbmFtZSwgb24gY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKICAgICAgICAgICAgICAgIHJldHVybgogICAgICAgIAogICAgICAgICMgSWYgbm90IGZvdW5kLCBjcmVhdGUgYSBuZXcgaW5zdGFuY2UKICAgICAgICBpZiBhbkVzc2VudGlhbEluc3RhbmNlID09IE5vbmU6ICAgICAgICAgICAgCiAgICAgICAgICAgIHByaW50ICJEZWxldGUgaW5zdGFuY2UgZmFpbGVkOiBVbmFibGUgdG8gZmluZCBzcGVjaWZpZWQgaW5zdGFuY2Ugb2YgY2xhc3M6ICIgKyB0aGVDbGFzc05hbWUKICAgIAogICAgcmV0dXJuCgojIFJlbW92ZSBhbmQgRGVsZXRlIGFuIGluc3RhbmNlIGZyb20gYSBzbG90CmRlZiBkZWxldGVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCB0aGVTbG90TmFtZSwgdGhlSW5zdGFuY2VUb0RlbGV0ZSk6CiAgICAiIiIKICAgICAgICBSZW1vdmUgYW5kIGRlbGV0ZSB0aGUgc3BlY2lmaWVkIGluc3RhbmNlIGZyb20gdGhlIG5hbWVkIHNsb3Qgb24gYSBzZWxlY3RlZCBpbnN0YW5jZQogICAgICAgIAogICAgICAgIHRoZUluc3RhbmNlIC0gdGhlIGluc3RhbmNlIGZyb20gd2hpY2ggdGhlIHNwZWNpZmllZCBpbnN0YW5jZSBpcyB0byBiZSBkZWxldGVkCiAgICAgICAgdGhlU2xvdE5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgc2xvdCBvbiB0aGVJbnN0YW5jZSBmcm9tIHdoaWNoIHRoZUluc3RhbmNlVG9EZWxldGUgaXMgdG8gYmUgZGVsZXRlZAogICAgICAgIHRoZUluc3RhbmNlVG9EZWxldGUgLSB0aGUgaW5zdGFuY2UgdGhhdCBpcyB0byBiZSBkZWxldGVkCiAgICAgICAgCiAgICAiIiIKICAgICMgQ2hlY2sgdGhhdCB0aGVJbnN0YW5jZVRvRGVsZXRlIGlzIHRoZXJlIGluIHRoZSBzcGVjaWZpZWQgc2xvdCAKICAgIHRoZVNsb3QgPSBrYi5nZXRTbG90KHRoZVNsb3ROYW1lKQogICAKICAgIGlmICh0aGVJbnN0YW5jZSAhPSBOb25lKSBhbmQgKHRoZVNsb3QgIT0gTm9uZSk6CiAgICAgICAgYW5JbnN0TGlzdCA9IHRoZUluc3RhbmNlLmdldE93blNsb3RWYWx1ZXModGhlU2xvdCkKICAgICAgICBpZiBhbkluc3RMaXN0ICE9IE5vbmU6CiAgICAgICAgICAgIGlmIGFuSW5zdExpc3QuY29udGFpbnModGhlSW5zdGFuY2VUb0RlbGV0ZSk6CiAgICAgICAgICAgICAgICBkZWxldGVJbnN0YW5jZSh0aGVJbnN0YW5jZVRvRGVsZXRlKQogICAgICAgICAgICAgICAgcHJpbnQgIkRlbGV0ZWQgaW5zdGFuY2UgZnJvbSBzbG90OiAiICsgdGhlU2xvdE5hbWUKCiMgUmVtb3ZlIGFsbCBvZiB0aGUgdmFsdWVzIGZyb20gYSBzbG90IG9uIGFuIGluc3RuYWNlCmRlZiByZW1vdmVBbGxWYWx1ZXNGcm9tU2xvdCh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUpOgogICAgIiIiCiAgICAgICAgUmVtb3ZlIGFsbCB0aGUgdmFsdWVzIGZyb20gdGhlIHNsb3QgZGVmaW5lZCBieSB0aGVTbG90TmFtZSBvbiB0aGUgc3BlY2lmaWVkIGluc3RhbmNlLgogICAgICAgIFNsb3QgdmFsdWVzIGNhbiBiZSBwcmltaXRpdmVzIG9yIGluc3RhbmNlcwogICAgICAgIAogICAgICAgIHRoZUluc3RhbmNlIC0gdGhlIGluc3RhbmNlIGZyb20gd2hpY2ggdG8gY2xlYXIgdGhlIHNwZWNpZmllZCBzbG90CiAgICAgICAgdGhlU2xvdE5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgc2xvdCBmcm9tIHdoaWNoIHRvIGNsZWFyIGFsbCB0aGUgdmFsdWVzCiAgICAiIiIKICAgIGFTbG90ID0ga2IuZ2V0U2xvdCh0aGVTbG90TmFtZSkKICAgIGlmICh0aGVJbnN0YW5jZSAhPSBOb25lKSBhbmQgKGFTbG90ICE9IE5vbmUpOgogICAgICAgIGFTbG90VHlwZSA9IHRoZUluc3RhbmNlLmdldE93blNsb3RWYWx1ZVR5cGUoYVNsb3QpCiAgICAgICAgaWYgYVNsb3RUeXBlID09IFZhbHVlVHlwZS5JTlNUQU5DRToKICAgICAgICAgICAgYVZhbHVlTGlzdCA9IHRoZUluc3RhbmNlLmdldE93blNsb3RWYWx1ZXMoYVNsb3QpCiAgICAgICAgICAgIGlmIGFWYWx1ZUxpc3QgIT0gTm9uZToKICAgICAgICAgICAgICAgIGZvciBhVmFsIGluIGFWYWx1ZUxpc3Q6CiAgICAgICAgICAgICAgICAgICAgcmVtb3ZlSW5zdGFuY2VGcm9tU2xvdCh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUsIGFWYWwpCiAgICAgICAgZWxzZToKICAgICAgICAgICAgY2xlYXJQcmltaXRpdmVTbG90VmFsdWUodGhlSW5zdGFuY2UsIHRoZVNsb3ROYW1lKQoKCiMgRGVsZXRlIGFsbCBvZiB0aGUgdmFsdWVzIGZyb20gYSBzbG90IG9uIGFuIGluc3RhbmNlCmRlZiBkZWxldGVBbGxWYWx1ZXNGcm9tU2xvdCh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUpOgogICAgIiIiIAogICAgICAgIFJlbW92ZSBhbmQgZGVsZXRlIGFsbCB0aGUgdmFsdWVzIGZyb20gdGhlIHNsb3QgZGVmaW5lZCBieSB0aGVTbG90TmFtZSBvbiB0aGUgc3BlY2lmaWVkIGluc3RhbmNlLgogICAgICAgIFNsb3QgdmFsdWVzIGNhbiBiZSBwcmltaXRpdmVzIC0gaW4gd2hpY2ggY2FzZSB0aGUgdmFsdWVzIGFyZSBjbGVhcmVkIC0gb3IgaW5zdGFuY2VzIHRoYXQgYXJlIHRoZW4gZGVsZXRlZAogICAgICAgIAogICAgICAgIHRoZUluc3RhbmNlIC0gdGhlIGluc3RhbmNlIGZyb20gd2hpY2ggdG8gY2xlYXIgdGhlIHNwZWNpZmllZCBzbG90CiAgICAgICAgdGhlU2xvdE5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgc2xvdCBmcm9tIHdoaWNoIHRvIGRlbGV0ZSBhbGwgb2YgdGhlIHZhbHVlcwogICAgIiIiCiAgICBhU2xvdCA9IGtiLmdldFNsb3QodGhlU2xvdE5hbWUpCiAgICBpZiAodGhlSW5zdGFuY2UgIT0gTm9uZSkgYW5kIChhU2xvdCAhPSBOb25lKToKICAgICAgICBhU2xvdFR5cGUgPSB0aGVJbnN0YW5jZS5nZXRPd25TbG90VmFsdWVUeXBlKGFTbG90KQogICAgICAgIGlmIGFTbG90VHlwZSA9PSBWYWx1ZVR5cGUuSU5TVEFOQ0U6ICAgICAgICAKICAgICAgICAgICAgYVZhbHVlTGlzdCA9IHRoZUluc3RhbmNlLmdldE93blNsb3RWYWx1ZXMoYVNsb3QpCiAgICAgICAgICAgIGlmIGFWYWx1ZUxpc3QgIT0gTm9uZToKICAgICAgICAgICAgICAgIGZvciBhVmFsIGluIGFWYWx1ZUxpc3Q6ICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICBkZWxldGVJbnN0YW5jZUZyb21TbG90KHRoZUluc3RhbmNlLCB0aGVTbG90TmFtZSwgYVZhbCkKICAgICAgICBlbHNlOgogICAgICAgICAgICBjbGVhclByaW1pdGl2ZVNsb3RWYWx1ZSh0aGVJbnN0YW5jZSwgdGhlU2xvdE5hbWUpCgojIEdldE5hbWVTbG90KCkKZGVmIEdldE5hbWVTbG90KHRoZUNsYXNzTmFtZSk6CiAgICAiIiIgR2V0IHRoZSBzbG90IHRoYXQgdGhlIG5hbWVkIGNsYXNzIHVzZXMgZm9yIHRoZSBuYW1lLgogICAgICAgIGZvciA6TUVUQS1DTEFTUyB0aGluZ3MgdGhpcyBpcyA6TkFNRQogICAgICAgIGZvciBFQV9DbGFzcyB0aGlzIGlzIG5hbWUKICAgICAgICBmb3IgRUFfUmVsYXRpb24gdGhpcyBpcyByZWxhdGlvbl9uYW1lCiAgICAgICAgZm9yIDpFQV9HcmFwaF9SZWxhdGlvbiB0aGlzIGlzIDpyZWxhdGlvbl9uYW1lCiAgICAKICAgICAgICB0aGVDbGFzc05hbWU6IHRoZSBuYW1lIG9mIHRoZSBjbGFzcyB0byBnZXQgdGhlIG5hbWUgc2xvdCBmb3IKICAgICAgICByZXR1cm5zIHRoZSBTbG90IG9iamVjdCBmb3IgdGhlIGNvcnJlY3QgbmFtZSBzbG90CiAgICAiIiIKICAgIGFDbGFzcyA9IGtiLmdldENscyh0aGVDbGFzc05hbWUpCiAgICBhTmFtZVNsb3QgPSBrYi5nZXRTbG90KCJuYW1lIikKICAgIGlmIGFDbGFzcyAhPSBOb25lOgogICAgICAgIGlmIGFDbGFzcy5oYXNTdXBlcmNsYXNzKGtiLmdldENscygiRUFfUmVsYXRpb24iKSk6CiAgICAgICAgICAgIGFOYW1lU2xvdCA9IGtiLmdldFNsb3QoInJlbGF0aW9uX25hbWUiKQogICAgICAgIGVsaWYgYUNsYXNzLmhhc1N1cGVyY2xhc3Moa2IuZ2V0Q2xzKCI6RUFfR3JhcGhfUmVsYXRpb24iKSk6CiAgICAgICAgICAgIGFOYW1lU2xvdCA9IGtiLmdldFNsb3QoIjpyZWxhdGlvbl9uYW1lIikKICAgICAgICBlbGlmIGFDbGFzcy5oYXNTdXBlcmNsYXNzKGtiLmdldENscygiOk1FVEEtQ0xBU1MiKSk6CiAgICAgICAgICAgIGFOYW1lU2xvdCA9IGtiLmdldFNsb3QoIjpOQU1FIikKCiAgICByZXR1cm4gYU5hbWVTbG90CgojIGdldEluc3RhbmNlQnlOYW1lKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VOYW1lKQpkZWYgZ2V0SW5zdGFuY2VCeU5hbWUodGhlQ2xhc3NOYW1lLCB0aGVJbnN0YW5jZU5hbWUpOgogICAgIiIiCiAgICAgICAgTG9vayBmb3IgYW4gaW5zdGFuY2Ugb2YgdGhlQ2xhc3NOYW1lIHdpdGggbmFtZSBzbG90ID0gdGhlSW5zdGFuY2VOYW1lLgogICAgICAgIElmIGZvdW5kLCByZXR1cm4gdGhhdCBpbnN0YW5jZSwgb3RoZXJ3aXNlIGNyZWF0ZSBpdC4KICAgICAgICAKICAgICAgICB0aGVDbGFzc05hbWUgLSB0aGUgbmFtZSBvZiB0aGUgQ2xhc3Mgb2Ygd2hpY2ggd2UgYXJlIHNlYXJjaGluZyBmb3IgYW4gaW5zdGFuY2UKICAgICAgICB0aGVJbnN0YW5jZU5hbWUgLSB0aGUgbmFtZSBvZiB0aGUgSW5zdGFuY2UgdGhhdCB3ZSBhcmUgc2VhcmNoaW5nIGZvci4KICAgICIiIiAgICAKICAgIGFuSW5zdCA9IEdldEluc3RhbmNlT2ZDbGFzcyh0aGVDbGFzc05hbWUsIHRoZUluc3RhbmNlTmFtZSkKICAgIGlmIGFuSW5zdCAhPSBOb25lOgogICAgICAgIHJldHVybiBhbkluc3QKICAgICAgICAKICAgICMgb3RoZXJ3aXNlLCBhbiBpbnN0YW5jZSBvZiB0aGUgY2xhc3Mgd2l0aCBuYW1lPXRoZUluc3RhbmNlTmFtZSBoYXMgbm90IGJlZW4gZm91bmQKICAgICMgSGFuZGxlIGF0dGVtcHRzIHRvIGNyZWF0ZSBpbnN0YW5jZXMgb2YgOlNUQU5EQVJELUNMQVNTIG9yIDpTVEFOREFSRC1TTE9UCiAgICBhQ2xhc3MgPSBrYi5nZXRDbHModGhlQ2xhc3NOYW1lKQogICAgaWYgYUNsYXNzID09IE5vbmU6CiAgICAgICAgcmV0dXJuIE5vbmUKICAgIGlmIGFDbGFzcy5oYXNTdXBlcmNsYXNzKGtiLmdldENscygiOk1FVEEtQ0xBU1MiKSk6CiAgICAgICAgcHJpbnQgIioqKiBZb3VyIG1ldGEgbW9kZWwgaXMgaW5jb21wYXRpYmxlIHdpdGggdGhpcyBzY3JpcHQuIEF0dGVtcHQgdG8gY3JlYXRlIGluc3RhbmNlIG9mIENsYXNzIG9yIFNsb3QgdGhhdCBpcyBub3QgaW4geW91ciB0YXJnZXQgcmVwb3NpdG9yeS4iCiAgICAgICAgcHJpbnQgIi0tLS0tLSBNZXRhIENsYXNzOiAiICsgdGhlQ2xhc3NOYW1lICsgIiBJbnN0YW5jZTogIiArIHRoZUluc3RhbmNlTmFtZSAKICAgICAgICBpZih0aGVDbGFzc05hbWUgPT0gIjpTVEFOREFSRC1DTEFTUyIpOgogICAgICAgICAgICBhTmV3SW5zdCA9IEdldEluc3RhbmNlQnlOYW1lKHRoZUNsYXNzTmFtZSwgIkVBX0NsYXNzIikKICAgICAgICAgICAgcmV0dXJuIGFOZXdJbnN0CiAgICAgICAgZWxpZih0aGVDbGFzc05hbWUgPT0gIjpTVEFOREFSRC1TTE9UIik6CiAgICAgICAgICAgIGFOZXdJbnN0ID0gR2V0SW5zdGFuY2VCeU5hbWUodGhlQ2xhc3NOYW1lLCAibmFtZSIpCiAgICAgICAgICAgIHJldHVybiBhTmV3SW5zdAogICAgICAgIGVsc2U6CiAgICAgICAgICAgIHJldHVybiBOb25lCgkgICAgIyBGaW5pc2hlZCBoYW5kbGluZyBpbnN0YW5jZXMgb2YgY2xhc3NlcyBhbmQgc2xvdHMKICAgIGFOZXdJbnN0ID0ga2IuY3JlYXRlSW5zdGFuY2UoTm9uZSwga2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkpCiAgICBhTmV3SW5zdC5zZXREaXJlY3RPd25TbG90VmFsdWUoYU5hbWVTbG90LCB0aGVJbnN0YW5jZU5hbWUpCiAgICByZXR1cm4gYU5ld0luc3QKCiMgR2V0SW5zdGFuY2VPZkNsYXNzKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VOYW1lKQpkZWYgR2V0SW5zdGFuY2VPZkNsYXNzKHRoZUNsYXNzTmFtZSwgdGhlSW5zdGFuY2VOYW1lKToKICAgICIiIgogICAgICAgIE5ld2VzdCBpbXBsZW1lbnRhdGlvbiBvZiBpbnN0YW5jZSBmaW5kaW5nIGZ1bmN0aW9uLiBEZXNpZ25lZCB0byBwZXJmb3JtCiAgICAgICAgYmV0dGVyIGVuIG1hc3NlLCB1c2luZyB0aGUgSmF2YSBBUEkgYW5kIFB5dGhvbiBmaWx0ZXIoKSBmdW5jdGlvbi4KICAgICAgICBGaW5kIHRoZSBpbnN0YW5jZSBvZiB0aGUgc3BlY2lmaWVkIGNsYXNzIHRoYXQgaGFzIGl0J3MgbmFtZSA9IHRoZUluc3RhbmNlTmFtZQogICAgICAgIElmIGZvdW5kLCByZXR1cm4gdGhhdCBJbnN0YW5jZSwgb3RoZXJ3aXNlIHJldHVybiBOb25lCiAgICAgICAgCiAgICAgICAgdGhlQ2xhc3NOYW1lIC0gdGhlIG5hbWUgb2YgdGhlIENsYXNzIG9mIHdoaWNoIHdlIGFyZSBzZWFyY2hpbmcgZm9yIGFuIGluc3RhbmNlCiAgICAgICAgdGhlSW5zdGFuY2VOYW1lIC0gdGhlIG5hbWUgb2YgdGhlIGluc3RhbmNlIHRoYXQgd2UgYXJlIHNlYXJjaGluZyBmb3IKICAgICIiIiAgICAKICAgIGFuSW5zdGFuY2UgPSBOb25lCiAgICBhTmFtZVNsb3QgPSBHZXROYW1lU2xvdCh0aGVDbGFzc05hbWUpCiAgICBhbkluc3RhbmNlTGlzdCA9IGtiLmdldEZyYW1lc1dpdGhWYWx1ZShhTmFtZVNsb3QsIE5vbmUsIDAsIHRoZUluc3RhbmNlTmFtZSkKICAgIGlmIGFuSW5zdGFuY2VMaXN0LnNpemUoKSA+IDA6CiAgICAgICAgYW5JbnN0YW5jZXNPZkNsYXNzID0gZmlsdGVyKGxhbWJkYSB4OiB4Lmhhc0RpcmVjdFR5cGUoa2IuZ2V0Q2xzKHRoZUNsYXNzTmFtZSkpLCBhbkluc3RhbmNlTGlzdCkKICAgICAgICBpZiBsZW4oYW5JbnN0YW5jZXNPZkNsYXNzKSA+IDA6CiAgICAgICAgICAgIGFuSW5zdGFuY2UgPSBhbkluc3RhbmNlc09mQ2xhc3NbMF0KICAgIHJldHVybiBhbkluc3RhbmNlCiMK</script>
+    <script type="application/xml" id="update-info-xml"><?xml version="1.0" encoding="UTF-8"?>
+<updatepack xmlns="http://www.enterprise-architecture.org/essential/updatepack"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.enterprise-architecture.org/essential/updatepack updatepack.xsd">
+    
+    <!-- Describe the update pack -->
+    <updatename>Data Import</updatename>
+    <updatedescription></updatedescription>
+    
+    <!-- Define any standard functions packs -->
+    <pack name="Common Functions" sequence="0">
+        <description>Pack of instance update functions</description>
+        <filename>standardFunctions.py</filename>
+    </pack>
+    
+    <!-- The script generated by the Import Utility -->
+    <pack name="Data Import" sequence="1">
+        <description></description>
+        <filename>dup_import_script.py</filename>
+        <chunktoken>###-CHUNK-###</chunktoken>
+    </pack>
+
+    
+</updatepack>
+</script>
+    <script type="application/xml" id="updatepack-xsd-xml"><?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns="http://www.enterprise-architecture.org/essential/updatepack"
+    targetNamespace="http://www.enterprise-architecture.org/essential/updatepack"           
+    elementFormDefault="qualified">
+    
+    <!-- 
+        * Copyright (c)2012 Enterprise Architecture Solutions ltd.
+        * This file is part of Essential Architecture Manager, 
+        * the Essential Architecture Meta Model and The Essential Project.
+        *
+        * Essential Architecture Manager is free software: you can redistribute it and/or modify
+        * it under the terms of the GNU General Public License as published by
+        * the Free Software Foundation, either version 3 of the License, or
+        * (at your option) any later version.
+        *
+        * Essential Architecture Manager is distributed in the hope that it will be useful,
+        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+        * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        * GNU General Public License for more details.
+        *
+        * You should have received a copy of the GNU General Public License
+        * along with Essential Architecture Manager.  If not, see <http://www.gnu.org/licenses/>.
+        * 
+        Schema for the update pack definition document that is used as the specification for the Essential Update Tab 
+    -->
+    <!-- 04.04.2012    JWC    1st coding-->
+    <xs:element name="updatepack">
+        <xs:complexType>
+            <xs:sequence>
+            	<xs:element name="updatename" type="xs:string" minOccurs="1" maxOccurs="1"></xs:element>
+                <xs:element name="updatedescription" type="xs:string" minOccurs="1" maxOccurs="1"></xs:element>
+                <xs:element name="pack" type="packdefinition" minOccurs="1" maxOccurs="unbounded"></xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:complexType name="packdefinition">
+        <xs:complexContent>
+            <xs:extension base="packdetails">
+                <xs:attribute name="name" type="xs:string" use="required"></xs:attribute>
+                <xs:attribute name="sequence" type="xs:int" use="required"></xs:attribute>
+            </xs:extension>
+        </xs:complexContent>    
+    </xs:complexType>
+    
+    <xs:complexType name="packdetails">        
+        <xs:sequence>    
+            <xs:element minOccurs="0" maxOccurs="1" type="xs:string" name="description"></xs:element>
+            <xs:element minOccurs="1" maxOccurs="1" type="xs:string" name="filename"></xs:element>
+            <xs:element minOccurs="0" maxOccurs="1" type="xs:string" name="chunktoken"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
+</script>
+    <script type="application/x-python" id="dup-import-script-header"># -*- coding: UTF-8 -*-
+# Copyright (c)2009-2018 Enterprise Architecture Solutions Ltd - Essential Architecture Manager Import Script #
+# generated by Essential Excel Import Manager: Fri Jun 12 10:56:58 UTC 2020 #
+ 
+from java.lang import Boolean
+from java.lang import Integer
+from java.lang import Float
+from java.lang import Double
+ 
+# Define the external repository instance #
+externalRepository = "Strategic Summary Editor"
+defineExternalRepository(externalRepository, "")
+
+Taxonomy1=EssentialGetInstance('Taxonomy', u'', u'SMART Objectives', u'', externalRepository)
+addIfNotThere(Taxonomy1, 'taxonomy_display_label', u'SMART Objectives')
+
+Taxonomy2=EssentialGetInstance('Taxonomy', u'', u'Strategic Goals', u'', externalRepository)
+addIfNotThere(Taxonomy2, 'taxonomy_display_label', u'Strategic Goals')
+
+TaxonomyTerm1=EssentialGetInstance('Taxonomy_Term', u'', u'SMART Objective', u'', externalRepository)
+addIfNotThere(TaxonomyTerm1, 'term_in_taxonomy', Taxonomy1)
+addIfNotThere(TaxonomyTerm1, 'taxonomy_term_label', u'SMART Objective')
+
+TaxonomyTerm2=EssentialGetInstance('Taxonomy_Term', u'', u'Strategic Goal', u'', externalRepository)
+addIfNotThere(TaxonomyTerm2, 'term_in_taxonomy', Taxonomy2)
+addIfNotThere(TaxonomyTerm2, 'taxonomy_term_label', u'Strategic Goal')
+
+</script>
+    <!-- Import JSON dialog -->
+    <dialog id="importModal" aria-labelledby="importModalTitle">
+      <div class="modal-header" id="importModalTitle">Import JSON</div>
+      <form method="dialog" id="importForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="importFile">File (.json) — optional</label>
+            <input id="importFile" type="file" accept=".json,application/json" />
+          </div>
+          <div class="field">
+            <label for="importTextarea">Paste JSON here</label>
+            <textarea id="importTextarea" placeholder='{"Drivers":["A Driver"],"Goals":[{"name":"Goal A","desc":"Description"}]}'></textarea>
+            <div class="muted">The format must use the same keys as Export JSON.</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelImportBtn">Cancel</button>
+          <button value="ok">Load</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Confirm Clear All dialog -->
+    <dialog id="confirmClearAll" aria-labelledby="confirmClearAllTitle">
+      <div class="modal-header" id="confirmClearAllTitle">Clear everything</div>
+      <div class="modal-body">Are you sure you want to clear all items? This action cannot be undone.</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" type="button" id="cancelClearAllBtn">Cancel</button>
+        <button type="button" id="confirmClearAllBtn">Clear</button>
+      </div>
+    </dialog>
+    <script>
+      (function(){
+        function selectTab(targetId){
+          var tabs = document.querySelectorAll('#tabs .tab-btn');
+          tabs.forEach(function(btn){ btn.classList.toggle('active', btn.getAttribute('data-target') === targetId); });
+          var panels = document.querySelectorAll('.tab-panel');
+          panels.forEach(function(p){ if(p.id === targetId){ p.removeAttribute('hidden'); } else { p.setAttribute('hidden',''); } });
+        }
+        function bootTabs(){
+          var tabsEl = document.getElementById('tabs');
+          if(!tabsEl){ return; }
+          tabsEl.addEventListener('click', function(e){
+            var btn = e.target.closest('.tab-btn');
+            if(!btn) return;
+            var targetId = btn.getAttribute('data-target');
+            if(!targetId) return;
+            selectTab(targetId);
+          });
+        }
+        if(document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', bootTabs);
+        }else{ bootTabs(); }
+      })();
+    </script>
+    <!-- Add Driver modal -->
+    <dialog id="addDriverDialog" aria-labelledby="addDriverTitle">
+      <div class="modal-header" id="addDriverTitle">Add Item</div>
+      <form method="dialog" id="addDriverForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="driverName">Driver name</label>
+            <input id="driverName" name="driverName" type="text" placeholder="Type the driver name" required />
+            <div class="muted">Enter confirms, Esc cancels.</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelAddDriverBtn">Cancel</button>
+          <button value="ok">Add</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Add Goal modal -->
+    <dialog id="addGoalDialog" aria-labelledby="addGoalTitle">
+      <div class="modal-header" id="addGoalTitle">Add Item</div>
+      <form method="dialog" id="addGoalForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="goalName">Goal name</label>
+            <input id="goalName" name="goalName" type="text" placeholder="Type the goal name" required />
+          </div>
+          <div class="field">
+            <label for="goalDesc">Description</label>
+            <textarea id="goalDesc" name="goalDesc" placeholder="Describe the goal"></textarea>
+          </div>
+          <div class="muted">Enter confirms, Esc cancels.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelAddGoalBtn">Cancel</button>
+          <button value="ok">Add</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Add Objective modal -->
+    <dialog id="addObjectiveDialog" aria-labelledby="addObjectiveTitle">
+      <div class="modal-header" id="addObjectiveTitle">Add Item</div>
+      <form method="dialog" id="addObjectiveForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="objectiveName">Objective name</label>
+            <input id="objectiveName" name="objectiveName" type="text" placeholder="Type the objective name" required />
+          </div>
+          <div class="field">
+            <label for="objectiveDesc">Description</label>
+            <textarea id="objectiveDesc" name="objectiveDesc" placeholder="Describe the objective"></textarea>
+          </div>
+          <div class="field">
+            <label for="objectiveOwner">Owner</label>
+            <input id="objectiveOwner" name="objectiveOwner" type="text" placeholder="e.g., Finance, HR" />
+          </div>
+          <div class="field">
+            <label for="objectivePerfIndicator">Performance Indicator</label>
+            <input id="objectivePerfIndicator" name="objectivePerfIndicator" type="text" placeholder="Enter performance indicator" />
+          </div>
+          <div class="field">
+            <label for="objectiveTargetMetric">Target Performance Metric</label>
+            <input id="objectiveTargetMetric" name="objectiveTargetMetric" type="text" placeholder="Suppliers Onboarded - 75 - %" />
+          </div>
+          <div class="muted">Enter confirms, Esc cancels.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelAddObjectiveBtn">Cancel</button>
+          <button value="ok">Add</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Add Strategic Plan modal -->
+    <dialog id="addStrategicPlanDialog" aria-labelledby="addStrategicPlanTitle">
+      <div class="modal-header" id="addStrategicPlanTitle">Add Item</div>
+      <form method="dialog" id="addStrategicPlanForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="strategicPlanName">Strategic Plan name</label>
+            <input id="strategicPlanName" name="strategicPlanName" type="text" placeholder="Type the plan name" required />
+          </div>
+          <div class="field">
+            <label for="strategicPlanDesc">Description</label>
+            <textarea id="strategicPlanDesc" name="strategicPlanDesc" placeholder="Describe the plan"></textarea>
+          </div>
+          <div class="field">
+            <label for="strategicPlanStart">Start Date (YYYY-MM-DD)</label>
+            <input id="strategicPlanStart" name="strategicPlanStart" type="text" placeholder="YYYY-MM-DD" />
+          </div>
+          <div class="field">
+            <label for="strategicPlanEnd">End Date (YYYY-MM-DD)</label>
+            <input id="strategicPlanEnd" name="strategicPlanEnd" type="text" placeholder="YYYY-MM-DD" />
+          </div>
+          <div class="muted">Enter confirms, Esc cancels.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelAddStrategicPlanBtn">Cancel</button>
+          <button value="ok">Add</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Edit Objective dialog -->
+    <dialog id="editObjectiveDialog" aria-labelledby="editObjectiveTitle">
+      <div class="modal-header" id="editObjectiveTitle">Edit Objective</div>
+      <form method="dialog" id="editObjectiveForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="editObjectiveName">Objective name</label>
+            <input id="editObjectiveName" name="editObjectiveName" type="text" placeholder="Update the objective name" required />
+          </div>
+          <div class="field">
+            <label for="editObjectiveDesc">Description</label>
+            <textarea id="editObjectiveDesc" name="editObjectiveDesc" placeholder="Update the description"></textarea>
+          </div>
+          <div class="field">
+            <label for="editObjectiveOwner">Owner</label>
+            <input id="editObjectiveOwner" name="editObjectiveOwner" type="text" placeholder="e.g., Finance, HR" />
+          </div>
+          <div class="field">
+            <label for="editObjectivePerfIndicator">Performance Indicator</label>
+            <input id="editObjectivePerfIndicator" name="editObjectivePerfIndicator" type="text" placeholder="Enter performance indicator" />
+          </div>
+          <div class="field">
+            <label for="editObjectiveTargetMetric">Target Performance Metric</label>
+            <input id="editObjectiveTargetMetric" name="editObjectiveTargetMetric" type="text" placeholder="Suppliers Onboarded - 75 - %" />
+          </div>
+          <div class="muted">Enter confirms, Esc cancels.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelEditObjectiveBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Edit Strategic Plan modal -->
+    <dialog id="editStrategicPlanDialog" aria-labelledby="editStrategicPlanTitle">
+      <div class="modal-header" id="editStrategicPlanTitle">Edit Strategic Plan</div>
+      <form method="dialog" id="editStrategicPlanForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="editStrategicPlanName">Strategic Plan name</label>
+            <input id="editStrategicPlanName" name="editStrategicPlanName" type="text" placeholder="Update the plan name" required />
+          </div>
+          <div class="field">
+            <label for="editStrategicPlanDesc">Description</label>
+            <textarea id="editStrategicPlanDesc" name="editStrategicPlanDesc" placeholder="Update the description"></textarea>
+          </div>
+          <div class="field">
+            <label for="editStrategicPlanStart">Start Date (YYYY-MM-DD)</label>
+            <input id="editStrategicPlanStart" name="editStrategicPlanStart" type="text" placeholder="YYYY-MM-DD" />
+          </div>
+          <div class="field">
+            <label for="editStrategicPlanEnd">End Date (YYYY-MM-DD)</label>
+            <input id="editStrategicPlanEnd" name="editStrategicPlanEnd" type="text" placeholder="YYYY-MM-DD" />
+          </div>
+          <div class="muted">Enter confirms, Esc cancels.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelEditStrategicPlanBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Link Objective to Strategic Plans dialog -->
+    <dialog id="linkObjectivePlansDialog" aria-labelledby="linkObjectivePlansTitle">
+      <div class="modal-header" id="linkObjectivePlansTitle">Associate Strategic Plans</div>
+      <form method="dialog" id="linkObjectivePlansForm">
+        <div class="modal-body">
+          <div class="muted" style="margin-bottom:8px;">Objective: <strong id="linkObjectiveName"></strong></div>
+          <div class="field">
+            <label for="objectivePlansSearch">Search strategic plans</label>
+            <input id="objectivePlansSearch" type="text" placeholder="Type to filter strategic plans" />
+          </div>
+          <div class="field"><label>Strategic Plans (select one or more)</label><div id="objectivePlansCheckboxes" class="checkbox-grid"></div></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelLinkObjectivePlansBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Link Driver to Goals dialog -->
+    <dialog id="linkDriverGoalsDialog" aria-labelledby="linkDriverGoalsTitle">
+      <div class="modal-header" id="linkDriverGoalsTitle">Associate Goals</div>
+      <form method="dialog" id="linkDriverGoalsForm">
+        <div class="modal-body">
+          <div class="muted" style="margin-bottom:8px;">Driver: <strong id="linkDriverName"></strong></div>
+          <div class="field"><label>Goals (select one or more)</label><div id="driverGoalsCheckboxes" class="checkbox-grid"></div></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelLinkDriverGoalsBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Edit Goal dialog -->
+    <dialog id="editGoalDialog" aria-labelledby="editGoalTitle">
+      <div class="modal-header" id="editGoalTitle">Edit Goal</div>
+      <form method="dialog" id="editGoalForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="editGoalName">Goal name</label>
+            <input id="editGoalName" name="editGoalName" type="text" placeholder="Update the goal name" required />
+          </div>
+          <div class="field">
+            <label for="editGoalDesc">Description</label>
+            <textarea id="editGoalDesc" name="editGoalDesc" placeholder="Update the description"></textarea>
+          </div>
+          <div class="muted">Enter confirms, Esc cancels.</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelEditGoalBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Link Goal to Objectives dialog -->
+    <dialog id="linkGoalObjectivesDialog" aria-labelledby="linkGoalObjectivesTitle">
+      <div class="modal-header" id="linkGoalObjectivesTitle">Associate Objectives</div>
+      <form method="dialog" id="linkGoalObjectivesForm">
+        <div class="modal-body">
+          <div class="muted" style="margin-bottom:8px;">Goal: <strong id="linkGoalName"></strong></div>
+          <div class="field">
+            <label for="goalObjectivesSearch">Search objectives</label>
+            <input id="goalObjectivesSearch" type="text" placeholder="Type to filter objectives" />
+          </div>
+          <div class="field"><label>Objectives (select one or more)</label><div id="goalObjectivesCheckboxes" class="checkbox-grid"></div></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelLinkGoalObjectivesBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <!-- Edit Driver dialog -->
+    <dialog id="editDriverDialog" aria-labelledby="editDriverTitle">
+      <div class="modal-header" id="editDriverTitle">Edit Driver</div>
+      <form method="dialog" id="editDriverForm">
+        <div class="modal-body">
+          <div class="field">
+            <label for="editDriverName">Driver name</label>
+            <input id="editDriverName" name="editDriverName" type="text" placeholder="Update the driver name" required />
+            <div class="muted">Enter confirms, Esc cancels.</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" type="button" id="cancelEditDriverBtn">Cancel</button>
+          <button value="ok">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <script>
+      (function(){
+        // Simple app state for later import/export
+        var AppState = (window.AppState = window.AppState || { drivers: [], goals: [], objectives: [], strategicPlans: [], driverGoals: {}, goalObjectives: {} });
+        var addBtn = document.getElementById('addDriverBtn');
+        var driversCountEl = document.getElementById('driversCount');
+        var goalsCountEl = document.getElementById('goalsCount');
+        var driversList = document.getElementById('driversList');
+        var dialog = document.getElementById('addDriverDialog');
+        var form = document.getElementById('addDriverForm');
+        var nameInput = document.getElementById('driverName');
+        var cancelBtn = document.getElementById('cancelAddDriverBtn');
+
+        // Goals elements
+        var addGoalBtn = document.getElementById('addGoalBtn');
+        var goalsList = document.getElementById('goalsList');
+        var goalDialog = document.getElementById('addGoalDialog');
+        var goalForm = document.getElementById('addGoalForm');
+        var goalNameInput = document.getElementById('goalName');
+        var goalDescInput = document.getElementById('goalDesc');
+        var cancelAddGoalBtn = document.getElementById('cancelAddGoalBtn');
+        // Link Goal->Objectives dialog elements
+        var linkGoalObjectivesDialog = document.getElementById('linkGoalObjectivesDialog');
+        var linkGoalObjectivesForm = document.getElementById('linkGoalObjectivesForm');
+        var linkGoalNameEl = document.getElementById('linkGoalName');
+        var goalObjectivesCheckboxes = document.getElementById('goalObjectivesCheckboxes');
+        var goalObjectivesSearch = document.getElementById('goalObjectivesSearch');
+        var cancelLinkGoalObjectivesBtn = document.getElementById('cancelLinkGoalObjectivesBtn');
+        var linkingGoalName = null;
+        var linkGoalSelectedSet = new Set();
+
+        function renderGoalObjectivesOptions(filterText){
+          goalObjectivesCheckboxes.innerHTML = '';
+          var all = AppState.objectives || [];
+          if(all.length === 0){
+            var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No Objectives registered. Add them in the "Objectives" tab.'; goalObjectivesCheckboxes.appendChild(p); return;
+          }
+          var f = String(filterText||'').toLowerCase();
+          all.forEach(function(o, idx){
+            var name = o && o.name ? o.name : '';
+            if(!name) return;
+            if(f && name.toLowerCase().indexOf(f) === -1) return;
+            var id = 'obj-' + idx;
+            var wrap = document.createElement('label');
+            var cb = document.createElement('input');
+            cb.type = 'checkbox'; cb.id = id; cb.value = name; cb.checked = linkGoalSelectedSet.has(name);
+            cb.addEventListener('change', function(){
+              if(cb.checked) linkGoalSelectedSet.add(name); else linkGoalSelectedSet.delete(name);
+            });
+            var span = document.createElement('span'); span.textContent = name;
+            wrap.append(cb, span);
+            goalObjectivesCheckboxes.appendChild(wrap);
+          });
+        }
+
+        // Objectives elements
+        var addObjectiveBtn = document.getElementById('addObjectiveBtn');
+        var objectivesList = document.getElementById('objectivesList');
+        var objectivesSearchInput = document.getElementById('objectivesSearch');
+        var objectivesCountEl = document.getElementById('objectivesCount');
+        var objectiveDialog = document.getElementById('addObjectiveDialog');
+        var objectiveForm = document.getElementById('addObjectiveForm');
+        var objectiveNameInput = document.getElementById('objectiveName');
+        var objectiveDescInput = document.getElementById('objectiveDesc');
+        var objectiveOwnerInput = document.getElementById('objectiveOwner');
+        var objectivePerfIndicatorInput = document.getElementById('objectivePerfIndicator');
+        var objectiveTargetMetricInput = document.getElementById('objectiveTargetMetric');
+        var cancelAddObjectiveBtn = document.getElementById('cancelAddObjectiveBtn');
+        // Strategic Plans elements
+        var addStrategicPlanBtn = document.getElementById('addStrategicPlanBtn');
+        var strategicPlansList = document.getElementById('strategicPlansList');
+        var strategicPlansSearchInput = document.getElementById('strategicPlansSearch');
+        var strategicPlanDialog = document.getElementById('addStrategicPlanDialog');
+        var strategicPlanForm = document.getElementById('addStrategicPlanForm');
+        var strategicPlanNameInput = document.getElementById('strategicPlanName');
+        var strategicPlanDescInput = document.getElementById('strategicPlanDesc');
+        var strategicPlanStartInput = document.getElementById('strategicPlanStart');
+        var strategicPlanEndInput = document.getElementById('strategicPlanEnd');
+        var cancelAddStrategicPlanBtn = document.getElementById('cancelAddStrategicPlanBtn');
+        // Edit Plan dialog elements
+        var editStrategicPlanDialog = document.getElementById('editStrategicPlanDialog');
+        var editStrategicPlanForm = document.getElementById('editStrategicPlanForm');
+        var editStrategicPlanNameInput = document.getElementById('editStrategicPlanName');
+        var editStrategicPlanDescInput = document.getElementById('editStrategicPlanDesc');
+        var editStrategicPlanStartInput = document.getElementById('editStrategicPlanStart');
+        var editStrategicPlanEndInput = document.getElementById('editStrategicPlanEnd');
+        var cancelEditStrategicPlanBtn = document.getElementById('cancelEditStrategicPlanBtn');
+        var editingStrategicPlanIndex = -1;
+        // Edit objective dialog elements
+        var editObjectiveDialog = document.getElementById('editObjectiveDialog');
+        var editObjectiveForm = document.getElementById('editObjectiveForm');
+        var editObjectiveNameInput = document.getElementById('editObjectiveName');
+        var editObjectiveDescInput = document.getElementById('editObjectiveDesc');
+        var editObjectiveOwnerInput = document.getElementById('editObjectiveOwner');
+        var editObjectivePerfIndicatorInput = document.getElementById('editObjectivePerfIndicator');
+        var editObjectiveTargetMetricInput = document.getElementById('editObjectiveTargetMetric');
+        var cancelEditObjectiveBtn = document.getElementById('cancelEditObjectiveBtn');
+        var editingObjectiveIndex = -1;
+        // Link Objective->Plans dialog elements
+        var linkObjectivePlansDialog = document.getElementById('linkObjectivePlansDialog');
+        var linkObjectivePlansForm = document.getElementById('linkObjectivePlansForm');
+        var linkObjectiveNameEl = document.getElementById('linkObjectiveName');
+        var objectivePlansSearch = document.getElementById('objectivePlansSearch');
+        var objectivePlansCheckboxes = document.getElementById('objectivePlansCheckboxes');
+        var cancelLinkObjectivePlansBtn = document.getElementById('cancelLinkObjectivePlansBtn');
+        var linkingObjectiveName = null;
+        var linkObjectiveSelectedSet = new Set();
+
+        function renderObjectivePlansOptions(filterText){
+          objectivePlansCheckboxes.innerHTML = '';
+          var all = AppState.strategicPlans || [];
+          if(all.length === 0){
+            var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No Strategic Plans registered. Add them in the "Strategic Plans" tab.'; objectivePlansCheckboxes.appendChild(p); return;
+          }
+          var f = String(filterText||'').toLowerCase();
+          all.forEach(function(sp, idx){
+            var name = sp && sp.name ? sp.name : '';
+            if(!name) return;
+            if(f && name.toLowerCase().indexOf(f) === -1) return;
+            var id = 'sp-' + idx;
+            var wrap = document.createElement('label');
+            var cb = document.createElement('input');
+            cb.type = 'checkbox'; cb.id = id; cb.value = name; cb.checked = linkObjectiveSelectedSet.has(name);
+            cb.addEventListener('change', function(){
+              if(cb.checked) linkObjectiveSelectedSet.add(name); else linkObjectiveSelectedSet.delete(name);
+            });
+            var span = document.createElement('span'); span.textContent = name;
+            wrap.append(cb, span);
+            objectivePlansCheckboxes.appendChild(wrap);
+          });
+        }
+        // Link Driver->Goals dialog elements
+        var linkDriverGoalsDialog = document.getElementById('linkDriverGoalsDialog');
+        var linkDriverGoalsForm = document.getElementById('linkDriverGoalsForm');
+        var linkDriverNameEl = document.getElementById('linkDriverName');
+        var driverGoalsCheckboxes = document.getElementById('driverGoalsCheckboxes');
+        var cancelLinkDriverGoalsBtn = document.getElementById('cancelLinkDriverGoalsBtn');
+        var linkingDriverName = null;
+        // Edit goal dialog elements
+        var editGoalDialog = document.getElementById('editGoalDialog');
+        var editGoalForm = document.getElementById('editGoalForm');
+        var editGoalNameInput = document.getElementById('editGoalName');
+        var editGoalDescInput = document.getElementById('editGoalDesc');
+        var cancelEditGoalBtn = document.getElementById('cancelEditGoalBtn');
+        var editingGoalIndex = -1;
+        // Edit driver dialog elements
+        var editDriverDialog = document.getElementById('editDriverDialog');
+        var editDriverForm = document.getElementById('editDriverForm');
+        var editDriverNameInput = document.getElementById('editDriverName');
+        var cancelEditDriverBtn = document.getElementById('cancelEditDriverBtn');
+        var editingDriverIndex = -1;
+
+        // Export/Import elements
+        var exportBtn = document.getElementById('exportBtn');
+        var importBtn = document.getElementById('importBtn');
+        var clearAllBtn = document.getElementById('clearAllBtn');
+        var exportModal = document.getElementById('exportModal');
+        var exportTextarea = document.getElementById('exportTextarea');
+        var closeExportBtn = document.getElementById('closeExportBtn');
+        var copyBtn = document.getElementById('copyBtn');
+        var importModalEl = document.getElementById('importModal');
+        var importForm = document.getElementById('importForm');
+        var importFile = document.getElementById('importFile');
+        var importTextarea = document.getElementById('importTextarea');
+        var cancelImportBtn = document.getElementById('cancelImportBtn');
+        // DUP generation assets
+        var pythonCodeB64El = document.getElementById('python-code-b64');
+        var updateInfoXmlEl = document.getElementById('update-info-xml');
+        var updatepackXsdEl = document.getElementById('updatepack-xsd-xml');
+        var dupScriptHeaderEl = document.getElementById('dup-import-script-header');
+        var createDupBtn = document.getElementById('createDupBtn');
+        // Confirm clear all dialog elements
+        var confirmClearAllDialog = document.getElementById('confirmClearAll');
+        var cancelClearAllBtn = document.getElementById('cancelClearAllBtn');
+        var confirmClearAllBtn = document.getElementById('confirmClearAllBtn');
+
+        function updateDriversCount(){
+          if(driversCountEl) driversCountEl.textContent = String(AppState.drivers.length);
+        }
+
+        function updateGoalsCount(){
+          if(goalsCountEl) goalsCountEl.textContent = String(AppState.goals.length);
+        }
+
+        function updateObjectivesCount(){
+          if(objectivesCountEl) objectivesCountEl.textContent = String(AppState.objectives.length);
+        }
+
+        function escHtml(s){
+          return String(s)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/\"/g,'&quot;')
+            .replace(/'/g,'&#039;');
+        }
+
+        // ===== DUP generation helpers (aligned with value-stream editor) =====
+        function b64ToUtf8(b64){
+          if(!b64) return "";
+          try{
+            var bin=atob(b64);
+            var bytes=Uint8Array.from(bin,function(c){ return c.charCodeAt(0); });
+            return new TextDecoder().decode(bytes);
+          }catch(err){
+            console.warn('Invalid base64 payload for standardFunctions.py; using placeholder.');
+            return '';
+          }
+        }
+        function isValidTargetMetric(val){
+          var s = String(val || '').trim();
+          if(!s) return true; // empty is allowed; validate only when filled
+          // Accept either:
+          //  A) <Description> - <Value> - <Unity>
+          //  B) <Description> <Value> - <Unity>   (when description itself contains '-')
+          var reA = /^.+\s-\s\d+(?:\.\d+)?\s-\s.+$/;           // classic 3-part
+          var reB = /^.+\s\d+(?:\.\d+)?\s-\s.+$/;               // desc ends with number, then delimiter
+          return reA.test(s) || reB.test(s);
+        }
+        function ensureDupExtension(name){ var base=(name||'').trim()||'export'; var trimmed=base.toLowerCase().endsWith('.dup')?base:(base+'.dup'); return trimmed; }
+        async function getStandardFunctionsB64(){
+          // Prefer embedded payload if present and non-trivial
+          var own = pythonCodeB64El && pythonCodeB64El.textContent ? pythonCodeB64El.textContent.trim() : '';
+          if(own && own.length > 120) return own;
+          // Try to load from Value Stream editor file to ensure exact same content
+          try{
+            var resp = await fetch('value-stream-editor-en-standalone.html', { cache: 'no-store' });
+            if(resp.ok){
+              var html = await resp.text();
+              var doc = new DOMParser().parseFromString(html, 'text/html');
+              var el = doc.getElementById('python-code-b64');
+              var b64 = el && el.textContent ? el.textContent.trim() : '';
+              if(b64) return b64;
+            }
+          }catch(_){ /* ignore */ }
+          return own; // fallback to local (may be placeholder)
+        }
+
+        async function createDupFromState(){
+          if(typeof JSZip==='undefined'){ alert('JSZip not available. Check your network connection.'); return; }
+          var outName = ensureDupExtension('Strategic Summary');
+          var pythonB64 = await getStandardFunctionsB64();
+          var decodedPythonCode = b64ToUtf8(pythonB64) || '# standardFunctions placeholder\n';
+          var updateInfoXml = updateInfoXmlEl ? updateInfoXmlEl.textContent : '';
+          var updatepackXsdXml = updatepackXsdEl ? updatepackXsdEl.textContent : '';
+          var dupScriptHeader = dupScriptHeaderEl ? dupScriptHeaderEl.textContent : '';
+          // Build DUP script body from current AppState (Drivers, Goals, Objectives)
+          function pyStr(val){
+            var s = String(val == null ? '' : val);
+            return s
+              .replace(/\\/g, '\\\\')   // backslashes
+              .replace(/\r?\n/g, ' ')       // newlines to spaces
+              .replace(/'/g, "\\'");       // single quotes
+          }
+          var lines = [];
+          try{
+            // For each item in Drivers -> create Business_Driver
+            (AppState.drivers || []).forEach(function(d){
+              var name = '', desc = '';
+              if(d && typeof d === 'object'){
+                name = String(d.name || '');
+                desc = String(d.desc || '');
+              }else{
+                name = String(d == null ? '' : d);
+              }
+              var n = pyStr(name);
+              if(n){
+                lines.push("BusinessDriver=EssentialGetInstance('Business_Driver', u'', u'" + n + "', u'', externalRepository)");
+              }
+            });
+            // For each item in Goals -> create Business_Goal with description
+            (AppState.goals || []).forEach(function(g){
+              var name = g && g.name ? String(g.name) : '';
+              var desc = g && g.desc ? String(g.desc) : '';
+              var n = pyStr(name);
+              var ds = pyStr(desc);
+              if(n){
+                lines.push("BusinessGoal=EssentialGetInstance('Business_Goal', u'', u'" + n + "', u'', externalRepository)");
+                lines.push("addIfNotThere(BusinessGoal, 'description', u'" + ds + "')");
+              }
+            });
+            // For each mapping in Driver Goals Mapping -> link Business_Driver to Business_Goal
+            (function(){
+              var m = AppState.driverGoals || {};
+              Object.keys(m).forEach(function(driver){
+                var dn = pyStr(driver);
+                if(!dn) return;
+                var arr = Array.isArray(m[driver]) ? m[driver] : [];
+                arr.forEach(function(goalName){
+                  var gn = pyStr(goalName);
+                  if(!gn) return;
+                  lines.push("BusinessDriver=EssentialGetInstance('Business_Driver', u'', u'" + dn + "', u'', externalRepository)");
+                  lines.push("BusinessGoal=EssentialGetInstance('Business_Goal', u'', u'" + gn + "', u'', externalRepository)");
+                  lines.push("addIfNotThere(BusinessDriver, 'bd_motivated_objectives', BusinessGoal)");
+                });
+              });
+            })();
+            // For each item in Objectives -> create Business_Objective classified by TaxonomyTerm1
+            (AppState.objectives || []).forEach(function(o){
+              var name = o && o.name ? String(o.name) : '';
+              var desc = o && o.desc ? String(o.desc) : '';
+              var ownerStr = o && o.owner ? String(o.owner) : '';
+              var perfIndStr = o && o.performanceIndicator ? String(o.performanceIndicator) : '';
+              var targetStr = o && o.targetPerformanceMetric ? String(o.targetPerformanceMetric) : '';
+              var n = pyStr(name);
+              var ds = pyStr(desc);
+              if(n){
+                lines.push("BusinessObjective=EssentialGetInstance('Business_Objective', u'', u'" + n + "', u'', externalRepository)");
+                lines.push("addIfNotThere(BusinessObjective, 'description', u'" + ds + "')");
+                lines.push("addIfNotThere(BusinessObjective, 'element_classified_by', TaxonomyTerm1)");
+                // Owner relationship (Group_Actor)
+                if(ownerStr){
+                  var ownerSafe = pyStr(ownerStr);
+                  lines.push("Owner=EssentialGetInstance('Group_Actor', u'', u'" + ownerSafe + "', u'', externalRepository)");
+                  lines.push("addIfNotThere(BusinessObjective, 'bo_owners', Owner)");
+                }
+                // Performance Indicator -> Service Quality relationship
+                if(perfIndStr){
+                  var piSafe = pyStr(perfIndStr);
+                  lines.push("BusinessServiceQuality=EssentialGetInstance('Business_Service_Quality', u'', u'" + piSafe + "', u'', externalRepository)");
+                  lines.push("ObjToSvcQuality=EssentialGetInstance('OBJ_TO_SVC_QUALITY_RELATION', u'', u'" + piSafe + "  measures " + n + "', u'', externalRepository)");
+                  lines.push("addIfNotThere(ObjToSvcQuality, 'obj_to_svc_quality_objective', BusinessObjective)");
+                  lines.push("addIfNotThere(ObjToSvcQuality, 'obj_to_svc_quality_service_quality', BusinessServiceQuality)");
+                  lines.push("addIfNotThere(BusinessObjective, 'bo_performance_measures', ObjToSvcQuality)");
+                }
+                // Target Performance Metric handling: <Desc> - <Value> - <Unity>
+                if(targetStr){
+                  var s = String(targetStr);
+                  var last = s.lastIndexOf(' - ');
+                  var prev = last > -1 ? s.lastIndexOf(' - ', last - 1) : -1;
+                  if(prev > -1 && last > prev){
+                    var tDesc = s.substring(0, prev).trim();
+                    var tVal = s.substring(prev + 3, last).trim();
+                    var tUnit = s.substring(last + 3).trim();
+                    var unitSafe = pyStr(tUnit);
+                    var tDescSafe = pyStr(tDesc);
+                    var tValName = pyStr(tDesc + ' - ' + tVal + tUnit);
+                    lines.push("UnitOfMeasure=EssentialGetInstance('Unit_Of_Measure', u'', u'" + unitSafe + "', u'', externalRepository)");
+                    lines.push("addIfNotThere(UnitOfMeasure, 'enumeration_value', u'" + unitSafe + "')");
+                    lines.push("BusinessServiceQuality=EssentialGetInstance('Business_Service_Quality', u'', u'" + tDescSafe + "', u'', externalRepository)");
+                    lines.push("BusinessServiceQualityValue=EssentialGetInstance('Business_Service_Quality_Value', u'', u'" + tValName + "', u'', externalRepository)");
+                    lines.push("addIfNotThere(BusinessServiceQualityValue, 'service_quality_value_uom', UnitOfMeasure)");
+                    lines.push("addIfNotThere(BusinessServiceQualityValue, 'usage_of_service_quality', BusinessServiceQuality)");
+                    lines.push("addIfNotThere(BusinessObjective, 'bo_measures', BusinessServiceQualityValue)");
+                  }
+                }
+              }
+            });
+            // For each mapping in Goal Objectives Mapping -> link Business_Goal to Business_Objective
+            (function(){
+              var m = AppState.goalObjectives || {};
+              Object.keys(m).forEach(function(goal){
+                var gn = pyStr(goal);
+                if(!gn) return;
+                var arr = Array.isArray(m[goal]) ? m[goal] : [];
+                arr.forEach(function(objName){
+                  var on = pyStr(objName);
+                  if(!on) return;
+                  lines.push("BusinessGoal=EssentialGetInstance('Business_Goal', u'', u'" + gn + "', u'', externalRepository)");
+                  lines.push("BusinessObjective=EssentialGetInstance('Business_Objective', u'', u'" + on + "', u'', externalRepository)");
+                  lines.push("addIfNotThere(BusinessGoal, 'goal_supported_by_objectives', BusinessObjective)");
+                });
+              });
+            })();
+            // For each item in Strategic Plans -> create Enterprise_Strategic_Plan with dates
+            (AppState.strategicPlans || []).forEach(function(sp){
+              var name = sp && sp.name ? String(sp.name) : '';
+              var desc = sp && sp.desc ? String(sp.desc) : '';
+              var start = sp && sp.startDate ? String(sp.startDate) : '';
+              var end = sp && sp.endDate ? String(sp.endDate) : '';
+              var n = pyStr(name);
+              var ds = pyStr(desc);
+              var st = pyStr(start);
+              var en = pyStr(end);
+              if(n){
+                lines.push("EnterpriseStrategicPlan=EssentialGetInstance('Enterprise_Strategic_Plan', u'', u'" + n + "', u'', externalRepository)");
+                lines.push("addIfNotThere(EnterpriseStrategicPlan, 'description', u'" + ds + "')");
+                lines.push("addIfNotThere(EnterpriseStrategicPlan, 'strategic_plan_valid_from_date_iso_8601', u'" + st + "')");
+                lines.push("addIfNotThere(EnterpriseStrategicPlan, 'strategic_plan_valid_to_date_iso_8601', u'" + en + "')");
+              }
+            });
+            // For each mapping in Objective Strategic Plans Mapping -> link Business_Objective to Enterprise_Strategic_Plan
+            (function(){
+              var m = AppState.objectivePlans || {};
+              Object.keys(m).forEach(function(objective){
+                var on = pyStr(objective);
+                if(!on) return;
+                var arr = Array.isArray(m[objective]) ? m[objective] : [];
+                arr.forEach(function(planName){
+                  var pn = pyStr(planName);
+                  if(!pn) return;
+                  lines.push("BusinessObjective=EssentialGetInstance('Business_Objective', u'', u'" + on + "', u'', externalRepository)");
+                  lines.push("StrategicPlan=EssentialGetInstance('Enterprise_Strategic_Plan', u'', u'" + pn + "', u'', externalRepository)");
+                  lines.push("addIfNotThere(BusinessObjective, 'objective_supported_by_strategic_plan', StrategicPlan)");
+                });
+              });
+            })();
+          }catch(_){ /* ignore generation errors and keep header-only script */ }
+          var body = lines.join('\n');
+          var dupScript = dupScriptHeader + (body ? ('\n' + body + '\n') : '\n');
+          var zip = new JSZip();
+          zip.file('dup_import_script.py', dupScript);
+          zip.file('standardFunctions.py', decodedPythonCode);
+          zip.file('update.info', updateInfoXml);
+          zip.file('updatepack.xsd', updatepackXsdXml);
+          var blob = await zip.generateAsync({type:'blob'});
+          if(window.showSaveFilePicker){
+            try{
+              var handle = await window.showSaveFilePicker({ suggestedName: outName, types:[{description:'Essential DUP', accept:{'application/zip':['.dup']}}] });
+              var writable = await handle.createWritable();
+              await writable.write(blob); await writable.close(); return;
+            }catch(err){ if(!err || err.name !== 'AbortError') console.warn(err); }
+          }
+          try{
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = outName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 100);
+          }catch(err){ alert('Error creating .dup: ' + (err && err.message ? err.message : String(err))); }
+        }
+
+        function renderDrivers(){
+          if(!driversList) return;
+          driversList.innerHTML = '';
+          AppState.drivers.forEach(function(name, idx){
+            var card = document.createElement('div');
+            card.className = 'card';
+            // Associated goals summary
+            var goalsSet = new Set((AppState.goals||[]).map(function(g){ return g.name; }));
+            var linked = ((AppState.driverGoals||{})[name]||[]).filter(function(n){ return goalsSet.has(n); });
+            var summary = linked.length
+              ? ('<div class="muted" style="margin-top:8px; font-weight:600;">Supported by Goals</div>'
+                 + '<div class="goal-list">' + linked.map(function(n){
+                    return '<div class="goal-chip">'
+                      + '<div class="name">' + escHtml(n) + '</div>'
+                      + '<div class="kind"><span class="icon">✈</span><span class="label">Goal</span></div>'
+                      + '</div>';
+                 }).join('') + '</div>')
+              : '<div class="muted">No goals linked</div>';
+            card.innerHTML = '<div class="box-header">'
+              + '<div class="box-title"><span aria-hidden="true">⛟</span><span>' + escHtml(name) + '</span></div>'
+              + '<div class="actions">'
+              +   '<button class="remove" data-action="link-goals" data-index="' + idx + '" title="Associate Goals">⌖</button>'
+              +   '<button class="remove" data-action="edit-driver" data-index="' + idx + '" title="Edit Driver">✎</button>'
+              +   '<button class="remove danger" data-action="remove" data-index="' + idx + '" title="Remove">&minus;</button>'
+              + '</div>'
+              + '</div>' + summary;
+            driversList.appendChild(card);
+          });
+          updateDriversCount();
+        }
+
+        function renderGoals(){
+          if(!goalsList) return;
+          goalsList.innerHTML = '';
+          AppState.goals.forEach(function(item, idx){
+            var name = escHtml(item && item.name ? item.name : '');
+            var desc = escHtml(item && item.desc ? item.desc : '');
+            var owner = escHtml(item && item.owner ? item.owner : '');
+            var perfInd = escHtml(item && item.performanceIndicator ? item.performanceIndicator : '');
+            var target = escHtml(item && item.targetPerformanceMetric ? item.targetPerformanceMetric : '');
+            var start = escHtml(item && item.startDate ? item.startDate : '');
+            var end = escHtml(item && item.endDate ? item.endDate : '');
+            var card = document.createElement('div');
+            card.className = 'card';
+            // Associated objectives summary
+            var objectivesSet = new Set((AppState.objectives||[]).map(function(o){ return o.name; }));
+            var linkedObj = ((AppState.goalObjectives||{})[item && item.name ? item.name : '']||[]).filter(function(n){ return objectivesSet.has(n); });
+            var objSummary = linkedObj.length
+              ? ('<div class="muted" style="margin-top:8px; font-weight:600;">Supported by Objectives</div>'
+                 + '<div class="goal-list-2col">' + linkedObj.map(function(n){
+                    return '<div class="goal-chip">'
+                      + '<div class="name">' + escHtml(n) + '</div>'
+                      + '<div class="kind"><span class="icon">✓</span><span class="label">Objective</span></div>'
+                      + '</div>';
+                 }).join('') + '</div>')
+              : '';
+            card.innerHTML = '<div class="box-header">'
+              + '<div class="box-title"><span aria-hidden="true">✈</span><span>' + name + '</span></div>'
+              + '<div class="actions">'
+              +   '<button class="remove" data-action="link-objectives" data-index="' + idx + '" title="Associate Objectives">⌖</button>'
+              +   '<button class="remove" data-action="edit-goal" data-index="' + idx + '" title="Edit Goal">✎</button>'
+              +   '<button class="remove danger" data-action="remove-goal" data-index="' + idx + '" title="Remove">&minus;</button>'
+              + '</div>'
+              + '</div>'
+              + (desc ? '<div class="muted">' + desc + '</div>' : '')
+              + objSummary;
+            goalsList.appendChild(card);
+          });
+          updateGoalsCount();
+        }
+
+        function toStringArray(v){
+          if(Array.isArray(v)) return v.map(function(x){ return String(x); });
+          if(['string','number','boolean'].indexOf(typeof v) > -1) return [String(v)];
+          return [];
+        }
+
+        function renderObjectives(){
+          if(!objectivesList) return;
+          objectivesList.innerHTML = '';
+          var f = ((objectivesSearchInput && objectivesSearchInput.value) ? String(objectivesSearchInput.value) : '').toLowerCase();
+          AppState.objectives.forEach(function(item, idx){
+            var rawName = (item && item.name ? String(item.name) : '');
+            var rawDesc = (item && item.desc ? String(item.desc) : '');
+            if(f){
+              var hay = (rawName + ' ' + rawDesc).toLowerCase();
+              if(hay.indexOf(f) === -1) return;
+            }
+            var name = escHtml(item && item.name ? item.name : '');
+            var desc = escHtml(item && item.desc ? item.desc : '');
+            var owner = escHtml(item && item.owner ? item.owner : '');
+            var perfInd = escHtml(item && item.performanceIndicator ? item.performanceIndicator : '');
+            var target = escHtml(item && item.targetPerformanceMetric ? item.targetPerformanceMetric : '');
+            var card = document.createElement('div');
+            card.className = 'card';
+            // Associated Strategic Plans summary
+            var plansSet = new Set((AppState.strategicPlans||[]).map(function(sp){ return sp.name; }));
+            var linkedPlans = ((AppState.objectivePlans||{})[item && item.name ? item.name : '']||[]).filter(function(n){ return plansSet.has(n); });
+            var plansSummary = linkedPlans.length
+              ? ('<div class="muted" style="margin-top:8px; font-weight:600;">Supported by Strategic Plans</div>'
+                 + '<div class="goal-list-2col">' + linkedPlans.map(function(n){
+                    return '<div class="goal-chip">'
+                      + '<div class="name">' + escHtml(n) + '</div>'
+                      + '<div class="kind"><span class="icon">⬈</span><span class="label">Strategic Plan</span></div>'
+                      + '</div>';
+                 }).join('') + '</div>')
+              : '';
+            card.innerHTML = '<div class="box-header">'
+              + '<div class="box-title"><span aria-hidden="true">✓</span><span>' + name + '</span></div>'
+              + '<div class="actions">'
+              +   '<button class="remove" data-action="link-plans" data-index="' + idx + '" title="Associate Strategic Plans">⌖</button>'
+              +   '<button class="remove" data-action="edit-objective" data-index="' + idx + '" title="Edit Objective">✎</button>'
+              +   '<button class="remove danger" data-action="remove-objective" data-index="' + idx + '" title="Remove">&minus;</button>'
+              + '</div>'
+              + '</div>'
+              + (desc ? '<div class="muted">' + desc + '</div>' : '')
+              + (owner ? '<div class="muted"><strong>Owner:</strong> ' + owner + '</div>' : '')
+              + (perfInd ? '<div class="muted"><strong>Performance Indicator:</strong> ' + perfInd + '</div>' : '')
+              + (target ? '<div class="muted"><strong>Target Performance Metric:</strong> ' + target + '</div>' : '')
+              + plansSummary;
+            objectivesList.appendChild(card);
+          });
+          updateObjectivesCount();
+        }
+
+        if(objectivesSearchInput){
+          objectivesSearchInput.addEventListener('input', function(){
+            renderObjectives();
+          });
+        }
+
+        // Live validation for Target Performance Metric inputs
+        if(objectiveTargetMetricInput){
+          objectiveTargetMetricInput.addEventListener('input', function(){
+            var val = objectiveTargetMetricInput.value || '';
+            if(val && !isValidTargetMetric(val)){
+              objectiveTargetMetricInput.style.borderColor = '#ef4444';
+            }else{
+              objectiveTargetMetricInput.style.borderColor = '';
+            }
+          });
+        }
+        if(editObjectiveTargetMetricInput){
+          editObjectiveTargetMetricInput.addEventListener('input', function(){
+            var val = editObjectiveTargetMetricInput.value || '';
+            if(val && !isValidTargetMetric(val)){
+              editObjectiveTargetMetricInput.style.borderColor = '#ef4444';
+            }else{
+              editObjectiveTargetMetricInput.style.borderColor = '';
+            }
+          });
+        }
+
+        function renderStrategicPlans(){
+          if(!strategicPlansList) return;
+          strategicPlansList.innerHTML = '';
+          var f = ((strategicPlansSearchInput && strategicPlansSearchInput.value) ? String(strategicPlansSearchInput.value) : '').toLowerCase();
+          (AppState.strategicPlans||[]).forEach(function(item, idx){
+            var rawName = (item && item.name ? String(item.name) : '');
+            var rawDesc = (item && item.desc ? String(item.desc) : '');
+            if(f){
+              var hay = (rawName + ' ' + rawDesc).toLowerCase();
+              if(hay.indexOf(f) === -1) return;
+            }
+            var name = escHtml(item && item.name ? item.name : '');
+            var desc = escHtml(item && item.desc ? item.desc : '');
+            var start = escHtml(item && item.startDate ? item.startDate : '');
+            var end = escHtml(item && item.endDate ? item.endDate : '');
+            var card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = '<div class="box-header">'
+              + '<div class="box-title"><span aria-hidden="true">⬈</span><span>' + name + '</span></div>'
+              + '<div class="actions">'
+              +   '<button class="remove" data-action="edit-plan" data-index="' + idx + '" title="Edit Strategic Plan">✎</button>'
+              +   '<button class="remove danger" data-action="remove-plan" data-index="' + idx + '" title="Remove">&minus;</button>'
+              + '</div>'
+              + '</div>'
+              + (desc ? '<div class="muted" style="border-bottom:1px dashed #e2e8f0;margin-bottom:8px;padding-bottom:8px;">' + desc + '</div>' : '')
+              + (start ? '<div class="muted" style="padding-bottom:8px;"><strong>Start Date:</strong> ' + start + '</div>' : '')
+              + (end ? '<div class="muted" style="padding-bottom:8px;"><strong>End Date:</strong> ' + end + '</div>' : '');
+            strategicPlansList.appendChild(card);
+          });
+        }
+
+        if(strategicPlansSearchInput){
+          strategicPlansSearchInput.addEventListener('input', function(){
+            renderStrategicPlans();
+          });
+        }
+
+        function getExportJSON(){
+          var out = {
+            Drivers: AppState.drivers.slice(),
+            Goals: AppState.goals.map(function(g){ return { name: g.name || '', desc: g.desc || '' }; }),
+            Objectives: AppState.objectives.map(function(o){ return { name: o.name || '', desc: o.desc || '', owner: o.owner || '', performanceIndicator: o.performanceIndicator || '', targetPerformanceMetric: o.targetPerformanceMetric || '' }; }),
+            "Strategic Plans": AppState.strategicPlans.map(function(sp){ return { name: sp.name || '', desc: sp.desc || '', startDate: sp.startDate || '', endDate: sp.endDate || '' }; }),
+            "Driver Goals Mapping": (function(){
+              var goalsSet = new Set(AppState.goals.map(function(g){ return g.name; }));
+              var m = {};
+              AppState.drivers.forEach(function(d){
+                var arr = (AppState.driverGoals[d]||[]).filter(function(n){ return goalsSet.has(n); });
+                if(arr.length) m[d] = arr;
+              });
+              return m;
+            })(),
+            "Goal Objectives Mapping": (function(){
+              var objSet = new Set(AppState.objectives.map(function(o){ return o.name; }));
+              var m = {};
+              AppState.goals.forEach(function(g){
+                var name = g && g.name ? g.name : '';
+                if(!name) return;
+                var arr = (AppState.goalObjectives[name]||[]).filter(function(n){ return objSet.has(n); });
+                if(arr.length) m[name] = arr;
+              });
+              return m;
+            })(),
+            "Objective Strategic Plans Mapping": (function(){
+              var spSet = new Set((AppState.strategicPlans||[]).map(function(sp){ return sp.name; }));
+              var m = {};
+              (AppState.objectives||[]).forEach(function(o){
+                var name = o && o.name ? o.name : "";
+                if(!name) return;
+                var arr = ((AppState.objectivePlans||{})[name]||[]).filter(function(n){ return spSet.has(n); });
+                if(arr.length) m[name] = arr;
+              });
+              return m;
+            })()
+          };
+          return JSON.stringify(out, null, 2);
+        }
+
+        function selectTabById(id){
+          // mirrors tabs logic to ensure activation from code
+          var tabs = document.querySelectorAll('#tabs .tab-btn');
+          tabs.forEach(function(btn){ btn.classList.toggle('active', btn.getAttribute('data-target') === id); });
+          var panels = document.querySelectorAll('.tab-panel');
+          panels.forEach(function(p){ if(p.id === id){ p.removeAttribute('hidden'); } else { p.setAttribute('hidden',''); } });
+        }
+
+        if(addBtn){
+          addBtn.addEventListener('click', function(){
+            // Go to Strategic Summary tab and open dialog
+            selectTabById('tab-strategic-summary');
+            dialog.showModal();
+            setTimeout(function(){ nameInput.focus(); }, 0);
+          });
+        }
+
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          var val = (nameInput.value || '').trim();
+          if(!val){ dialog.close(); return; }
+          AppState.drivers.push(val);
+          nameInput.value = '';
+          dialog.close();
+          renderDrivers();
+        });
+        cancelBtn.addEventListener('click', function(){ dialog.close(); });
+
+        // Goals interactions
+        if(addGoalBtn){
+          addGoalBtn.addEventListener('click', function(){
+            selectTabById('tab-goals');
+            goalDialog.showModal();
+            setTimeout(function(){ goalNameInput.focus(); }, 0);
+          });
+        }
+
+        goalForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          var name = (goalNameInput.value || '').trim();
+          var desc = (goalDescInput.value || '').trim();
+          if(!name){ goalDialog.close(); return; }
+          AppState.goals.push({ name: name, desc: desc });
+          goalNameInput.value = '';
+          goalDescInput.value = '';
+          goalDialog.close();
+          renderGoals();
+        });
+        cancelAddGoalBtn.addEventListener('click', function(){ goalDialog.close(); });
+
+        // Objectives interactions
+        if(addObjectiveBtn){
+          addObjectiveBtn.addEventListener('click', function(){
+            selectTabById('tab-objectives');
+            objectiveDialog.showModal();
+            setTimeout(function(){ objectiveNameInput.focus(); }, 0);
+            if(objectiveTargetMetricInput){ objectiveTargetMetricInput.style.borderColor = ''; }
+          });
+        }
+        objectiveForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          var name = (objectiveNameInput.value || '').trim();
+          var desc = (objectiveDescInput.value || '').trim();
+          var owner = (objectiveOwnerInput && objectiveOwnerInput.value || '').trim();
+          var perfInd = (objectivePerfIndicatorInput && objectivePerfIndicatorInput.value || '').trim();
+          var target = (objectiveTargetMetricInput && objectiveTargetMetricInput.value || '').trim();
+          if(!name){ objectiveDialog.close(); return; }
+          if(target && !isValidTargetMetric(target)){
+            if(objectiveTargetMetricInput){ objectiveTargetMetricInput.style.borderColor = '#ef4444'; }
+            return;
+          }
+          if(objectiveTargetMetricInput){ objectiveTargetMetricInput.style.borderColor = ''; }
+          AppState.objectives.push({ name: name, desc: desc, owner: owner, performanceIndicator: perfInd, targetPerformanceMetric: target });
+          if(objectiveNameInput) objectiveNameInput.value = '';
+          if(objectiveDescInput) objectiveDescInput.value = '';
+          if(objectiveOwnerInput) objectiveOwnerInput.value = '';
+          if(objectivePerfIndicatorInput) objectivePerfIndicatorInput.value = '';
+          if(objectiveTargetMetricInput) objectiveTargetMetricInput.value = '';
+          objectiveDialog.close();
+          renderObjectives();
+        });
+        cancelAddObjectiveBtn.addEventListener('click', function(){ if(objectiveTargetMetricInput){ objectiveTargetMetricInput.style.borderColor = ''; } objectiveDialog.close(); });
+
+        // Strategic Plans interactions
+        if(addStrategicPlanBtn){
+          addStrategicPlanBtn.addEventListener('click', function(){
+            selectTabById('tab-strategic-plans');
+            strategicPlanDialog.showModal();
+            setTimeout(function(){ strategicPlanNameInput.focus(); }, 0);
+          });
+        }
+        strategicPlanForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          var name = (strategicPlanNameInput.value || '').trim();
+          var desc = (strategicPlanDescInput.value || '').trim();
+          var start = (strategicPlanStartInput && strategicPlanStartInput.value) ? strategicPlanStartInput.value : '';
+          var end = (strategicPlanEndInput && strategicPlanEndInput.value) ? strategicPlanEndInput.value : '';
+          if(!name){ strategicPlanDialog.close(); return; }
+          AppState.strategicPlans.push({ name: name, desc: desc, startDate: start, endDate: end });
+          strategicPlanNameInput.value = '';
+          strategicPlanDescInput.value = '';
+          if(strategicPlanStartInput) strategicPlanStartInput.value = '';
+          if(strategicPlanEndInput) strategicPlanEndInput.value = '';
+          strategicPlanDialog.close();
+          renderStrategicPlans();
+        });
+        cancelAddStrategicPlanBtn.addEventListener('click', function(){ strategicPlanDialog.close(); });
+
+        // Strategic Plans list handlers (edit / remove)
+        strategicPlansList.addEventListener('click', function(e){
+          var btn = e.target.closest('[data-action="remove-plan"]');
+          if(btn){
+            var idx = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idx)) return;
+            var removed = (AppState.strategicPlans||[]).splice(idx, 1)[0];
+            if(removed && removed.name && AppState.objectivePlans){
+              // Remove references to this plan from all objectives
+              Object.keys(AppState.objectivePlans).forEach(function(objName){
+                var arr = AppState.objectivePlans[objName] || [];
+                var filtered = arr.filter(function(n){ return n !== removed.name; });
+                AppState.objectivePlans[objName] = filtered;
+              });
+            }
+            renderStrategicPlans();
+            // Also refresh Objectives to update linked plans summary
+            renderObjectives();
+            return;
+          }
+          btn = e.target.closest('[data-action="edit-plan"]');
+          if(btn){
+            var idxE = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idxE)) return;
+            editingStrategicPlanIndex = idxE;
+            var sp = (AppState.strategicPlans||[])[idxE] || {name:'', desc:'', startDate:'', endDate:''};
+            editStrategicPlanNameInput.value = sp.name || '';
+            editStrategicPlanDescInput.value = sp.desc || '';
+            if(editStrategicPlanStartInput) editStrategicPlanStartInput.value = sp.startDate || '';
+            if(editStrategicPlanEndInput) editStrategicPlanEndInput.value = sp.endDate || '';
+            editStrategicPlanDialog.showModal();
+            setTimeout(function(){ editStrategicPlanNameInput.select(); }, 0);
+            return;
+          }
+        });
+
+        // Save edited Strategic Plan
+        editStrategicPlanForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(editingStrategicPlanIndex < 0){ editStrategicPlanDialog.close(); return; }
+          var old = (AppState.strategicPlans||[])[editingStrategicPlanIndex] || {name:'', desc:'', startDate:'', endDate:''};
+          var newName = (editStrategicPlanNameInput.value || '').trim();
+          var newDesc = (editStrategicPlanDescInput.value || '').trim();
+          var newStart = (editStrategicPlanStartInput && editStrategicPlanStartInput.value) ? editStrategicPlanStartInput.value : '';
+          var newEnd = (editStrategicPlanEndInput && editStrategicPlanEndInput.value) ? editStrategicPlanEndInput.value : '';
+          if(!newName){ editStrategicPlanDialog.close(); return; }
+          // Update plan object
+          AppState.strategicPlans[editingStrategicPlanIndex] = { name: newName, desc: newDesc, startDate: newStart, endDate: newEnd };
+          // If name changed, migrate Objective->Plans mapping values
+          if(old.name && old.name !== newName && AppState.objectivePlans){
+            Object.keys(AppState.objectivePlans).forEach(function(objName){
+              var arr = AppState.objectivePlans[objName] || [];
+              var changed = false;
+              for(var i=0;i<arr.length;i++){
+                if(arr[i] === old.name){ arr[i] = newName; changed = true; }
+              }
+              if(changed){ AppState.objectivePlans[objName] = Array.from(new Set(arr)); }
+            });
+          }
+          editingStrategicPlanIndex = -1;
+          editStrategicPlanDialog.close();
+          renderStrategicPlans();
+          renderObjectives();
+        });
+        cancelEditStrategicPlanBtn.addEventListener('click', function(){ editingStrategicPlanIndex = -1; editStrategicPlanDialog.close(); });
+
+        // Objective list handlers (edit / remove)
+        objectivesList.addEventListener('click', function(e){
+          var btn = e.target.closest('[data-action="remove-objective"]');
+          if(btn){
+            var idx = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idx)) return;
+            AppState.objectives.splice(idx, 1);
+            renderObjectives();
+            return;
+          }
+          // Associate Strategic Plans
+          btn = e.target.closest('[data-action="link-plans"]');
+          if(btn){
+            var i = Number(btn.getAttribute('data-index'));
+            if(!Number.isNaN(i)){
+              var o = AppState.objectives[i];
+              linkingObjectiveName = o && o.name ? o.name : '';
+              linkObjectiveNameEl.textContent = linkingObjectiveName;
+              linkObjectiveSelectedSet = new Set((AppState.objectivePlans && AppState.objectivePlans[linkingObjectiveName])||[]);
+              if(objectivePlansSearch) objectivePlansSearch.value = '';
+              renderObjectivePlansOptions('');
+              linkObjectivePlansDialog.showModal();
+            }
+            return;
+          }
+          btn = e.target.closest('[data-action="edit-objective"]');
+          if(btn){
+            var idxE = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idxE)) return;
+            editingObjectiveIndex = idxE;
+            var o = AppState.objectives[idxE] || {name:'', desc:'', owner:'', performanceIndicator:'', targetPerformanceMetric:''};
+            editObjectiveNameInput.value = o.name || '';
+            editObjectiveDescInput.value = o.desc || '';
+            if(editObjectiveOwnerInput) editObjectiveOwnerInput.value = o.owner || '';
+            if(editObjectivePerfIndicatorInput) editObjectivePerfIndicatorInput.value = o.performanceIndicator || '';
+            if(editObjectiveTargetMetricInput) editObjectiveTargetMetricInput.value = o.targetPerformanceMetric || '';
+            editObjectiveDialog.showModal();
+            if(editObjectiveTargetMetricInput){ editObjectiveTargetMetricInput.style.borderColor = ''; }
+            setTimeout(function(){ editObjectiveNameInput.select(); }, 0);
+            return;
+          }
+        });
+
+        // Live filter for Goal->Objectives association
+        if(goalObjectivesSearch){
+          goalObjectivesSearch.addEventListener('input', function(){
+            renderGoalObjectivesOptions(goalObjectivesSearch.value || '');
+          });
+        }
+
+        // Save edited Objective
+        editObjectiveForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(editingObjectiveIndex < 0){ editObjectiveDialog.close(); return; }
+          var newName = (editObjectiveNameInput.value || '').trim();
+          var newDesc = (editObjectiveDescInput.value || '').trim();
+          var newOwner = (editObjectiveOwnerInput && editObjectiveOwnerInput.value || '').trim();
+          var newPerfInd = (editObjectivePerfIndicatorInput && editObjectivePerfIndicatorInput.value || '').trim();
+          var newTarget = (editObjectiveTargetMetricInput && editObjectiveTargetMetricInput.value || '').trim();
+          if(!newName){ editObjectiveDialog.close(); return; }
+          if(newTarget && !isValidTargetMetric(newTarget)){
+            if(editObjectiveTargetMetricInput){ editObjectiveTargetMetricInput.style.borderColor = '#ef4444'; }
+            return;
+          }
+          if(editObjectiveTargetMetricInput){ editObjectiveTargetMetricInput.style.borderColor = ''; }
+          // If objective name changed, update Goal->Objectives mapping values
+          var oldObj = AppState.objectives[editingObjectiveIndex] || {name:'', desc:'', owner:'', performanceIndicator:'', targetPerformanceMetric:''};
+          AppState.objectives[editingObjectiveIndex] = { name: newName, desc: newDesc, owner: newOwner, performanceIndicator: newPerfInd, targetPerformanceMetric: newTarget };
+          if(oldObj.name && oldObj.name !== newName){
+            Object.keys(AppState.goalObjectives||{}).forEach(function(gname){
+              var arr = AppState.goalObjectives[gname] || [];
+              var changed = false;
+              for(var i=0;i<arr.length;i++){
+                if(arr[i] === oldObj.name){ arr[i] = newName; changed = true; }
+              }
+              if(changed){ AppState.goalObjectives[gname] = Array.from(new Set(arr)); }
+            });
+          }
+          editingObjectiveIndex = -1;
+          editObjectiveDialog.close();
+          renderObjectives();
+        });
+        cancelEditObjectiveBtn.addEventListener('click', function(){ editingObjectiveIndex = -1; if(editObjectiveTargetMetricInput){ editObjectiveTargetMetricInput.style.borderColor = ''; } editObjectiveDialog.close(); });
+
+        // Save Objective->Strategic Plans associations
+        linkObjectivePlansForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(!linkingObjectiveName){ linkObjectivePlansDialog.close(); return; }
+          var validPlanNames = new Set((AppState.strategicPlans||[]).map(function(sp){ return sp.name; }));
+          var selected = Array.from(linkObjectiveSelectedSet).filter(function(n){ return validPlanNames.has(n); });
+          AppState.objectivePlans = AppState.objectivePlans || {};
+          AppState.objectivePlans[linkingObjectiveName] = selected;
+          linkingObjectiveName = null;
+          linkObjectivePlansDialog.close();
+          renderObjectives();
+        });
+        cancelLinkObjectivePlansBtn.addEventListener('click', function(){ linkingObjectiveName = null; linkObjectivePlansDialog.close(); });
+        if(objectivePlansSearch){
+          objectivePlansSearch.addEventListener('input', function(){
+            renderObjectivePlansOptions(objectivePlansSearch.value || '');
+          });
+        }
+
+        goalsList.addEventListener('click', function(e){
+          var btn = e.target.closest('[data-action="remove-goal"]');
+          if(btn){
+            var idx = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idx)) return;
+            var removed = AppState.goals.splice(idx, 1)[0];
+            if(removed && removed.name){
+              Object.keys(AppState.driverGoals||{}).forEach(function(d){
+                AppState.driverGoals[d] = (AppState.driverGoals[d]||[]).filter(function(n){ return n !== removed.name; });
+              });
+              // also clear goal->objectives mapping for this goal
+              if(AppState.goalObjectives){ delete AppState.goalObjectives[removed.name]; }
+            }
+            renderGoals();
+            renderDrivers();
+            return;
+          }
+          // Associate Objectives
+          btn = e.target.closest('[data-action="link-objectives"]');
+          if(btn){
+            var i = Number(btn.getAttribute('data-index'));
+            if(!Number.isNaN(i)){
+              var g = AppState.goals[i];
+              linkingGoalName = g && g.name ? g.name : '';
+              linkGoalNameEl.textContent = linkingGoalName;
+              // Initialize selection set and search
+              linkGoalSelectedSet = new Set((AppState.goalObjectives[linkingGoalName]||[]));
+              if(goalObjectivesSearch) goalObjectivesSearch.value = '';
+              renderGoalObjectivesOptions('');
+              linkGoalObjectivesDialog.showModal();
+            }
+            return;
+          }
+          // Edit Goal
+          btn = e.target.closest('[data-action="edit-goal"]');
+          if(btn){
+            var idxE = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idxE)) return;
+            editingGoalIndex = idxE;
+            var g = AppState.goals[idxE] || {name:'', desc:''};
+            editGoalNameInput.value = g.name || '';
+            editGoalDescInput.value = g.desc || '';
+            editGoalDialog.showModal();
+            setTimeout(function(){ editGoalNameInput.select(); }, 0);
+            return;
+          }
+        });
+
+        // Live filter for Goal->Objectives association
+        if(goalObjectivesSearch){
+          goalObjectivesSearch.addEventListener('input', function(){
+            renderGoalObjectivesOptions(goalObjectivesSearch.value || '');
+          });
+        }
+
+        // Save Goal->Objectives associations
+        linkGoalObjectivesForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(!linkingGoalName){ linkGoalObjectivesDialog.close(); return; }
+          var validObjNames = new Set(AppState.objectives.map(function(o){ return o.name; }));
+          var selected = Array.from(linkGoalSelectedSet).filter(function(n){ return validObjNames.has(n); });
+          AppState.goalObjectives[linkingGoalName] = selected;
+          linkingGoalName = null;
+          linkGoalObjectivesDialog.close();
+          renderGoals();
+        });
+        cancelLinkGoalObjectivesBtn.addEventListener('click', function(){ linkingGoalName = null; linkGoalObjectivesDialog.close(); });
+
+        // Save edited Goal
+        editGoalForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(editingGoalIndex < 0){ editGoalDialog.close(); return; }
+          var old = AppState.goals[editingGoalIndex] || {name:'', desc:''};
+          var newName = (editGoalNameInput.value || '').trim();
+          var newDesc = (editGoalDescInput.value || '').trim();
+          if(!newName){ editGoalDialog.close(); return; }
+          // Update goal object
+          AppState.goals[editingGoalIndex] = { name: newName, desc: newDesc };
+          // Migrate mapping names if changed
+          if(old.name && old.name !== newName){
+            Object.keys(AppState.driverGoals||{}).forEach(function(d){
+              var arr = AppState.driverGoals[d] || [];
+              var changed = false;
+              for(var i=0;i<arr.length;i++){
+                if(arr[i] === old.name){ arr[i] = newName; changed = true; }
+              }
+              if(changed){
+                // dedupe
+                AppState.driverGoals[d] = Array.from(new Set(arr));
+              }
+            });
+            // migrate goal->objectives mapping key as well
+            if(AppState.goalObjectives){
+              var existing = AppState.goalObjectives[old.name] || [];
+              var existingNew = AppState.goalObjectives[newName] || [];
+              if(existing.length){
+                AppState.goalObjectives[newName] = Array.from(new Set(existingNew.concat(existing)));
+                delete AppState.goalObjectives[old.name];
+              }
+            }
+          }
+          editingGoalIndex = -1;
+          editGoalDialog.close();
+          renderGoals();
+          renderDrivers();
+        });
+        cancelEditGoalBtn.addEventListener('click', function(){ editingGoalIndex = -1; editGoalDialog.close(); });
+
+        // Export JSON
+        if(exportBtn){
+          exportBtn.addEventListener('click', function(){
+            exportTextarea.value = getExportJSON();
+            exportModal.showModal();
+            exportTextarea.focus();
+            exportTextarea.select();
+          });
+        }
+        if(closeExportBtn){ closeExportBtn.addEventListener('click', function(){ exportModal.close(); }); }
+        if(copyBtn){
+          copyBtn.addEventListener('click', function(){
+            try{
+              navigator.clipboard.writeText(exportTextarea.value).then(function(){
+                copyBtn.textContent = 'Copied!';
+                setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 1200);
+              }, function(){
+                copyBtn.textContent = 'Select and copy';
+                setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 1500);
+              });
+            }catch(_){
+              copyBtn.textContent = 'Select and copy';
+              setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 1500);
+            }
+          });
+        }
+
+        // Create DUP
+        if(createDupBtn){
+          createDupBtn.addEventListener('click', function(){
+            createDupFromState().catch(function(err){ console.error(err); alert('Error creating .dup: ' + (err && err.message ? err.message : String(err))); });
+          });
+        }
+
+        // Import JSON
+        if(importBtn){
+          importBtn.addEventListener('click', function(){
+            if(importFile) importFile.value = '';
+            importTextarea.value = '';
+            importModalEl.showModal();
+          });
+        }
+        if(cancelImportBtn){ cancelImportBtn.addEventListener('click', function(){ importModalEl.close(); }); }
+        if(importFile){
+          importFile.addEventListener('change', function(e){
+            var f = e.target.files && e.target.files[0];
+            if(!f) return;
+            var reader = new FileReader();
+            reader.onload = function(){ importTextarea.value = String(reader.result || ''); };
+            reader.readAsText(f);
+          });
+        }
+        function tryParseStrategicJSON(raw){
+          // First try strict JSON
+          try{ return JSON.parse(raw); }catch(e){ /* continue */ }
+          // Lenient fallback: quote common unquoted keys if present (owner, performanceIndicator, targetPerformanceMetric)
+          try{
+            var fixed = raw
+              .replace(/([,{]\s*)owner\s*:/g, '$1"owner":')
+              .replace(/([,{]\s*)performanceIndicator\s*:/g, '$1"performanceIndicator":')
+              .replace(/([,{]\s*)targetPerformanceMetric\s*:/g, '$1"targetPerformanceMetric":');
+            return JSON.parse(fixed);
+          }catch(e2){ throw e2; }
+        }
+        if(importForm){
+          importForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            var raw = (importTextarea.value || '').replace(/^\uFEFF/, '').trim();
+            if(!raw){ alert('Paste JSON or select a file before loading.'); return; }
+            var obj;
+            try{
+              obj = tryParseStrategicJSON(raw);
+            }catch(err){
+              alert('Invalid JSON. Check the content and try again.\n' + (err && err.message ? err.message : ''));
+              return;
+            }
+            function step(label, fn){
+              try{ fn(); }
+              catch(err){ throw new Error(label + ': ' + (err && err.message ? err.message : err)); }
+            }
+            try{
+              step('Drivers', function(){
+                if(obj && Object.prototype.hasOwnProperty.call(obj, 'Drivers')){
+                  AppState.drivers = toStringArray(obj.Drivers);
+                }
+              });
+              step('Goals', function(){
+                if(obj && Array.isArray(obj.Goals)){
+                  AppState.goals = obj.Goals.map(function(g){
+                    if(g && typeof g === 'object') return { name: String(g.name || ''), desc: String(g.desc || '') };
+                    return { name: String(g || ''), desc: '' };
+                  }).filter(function(g){ return g.name.trim().length > 0; });
+                }
+              });
+              step('Driver Goals Mapping', function(){
+                AppState.driverGoals = {};
+                var mapKey = Object.keys(obj).find(function(k){ return String(k).toLowerCase() === 'driver goals mapping'; });
+                if(mapKey){
+                  var m = obj[mapKey];
+                  if(m && typeof m === 'object'){
+                    var driversSet = new Set(AppState.drivers);
+                    var goalsSet = new Set(AppState.goals.map(function(g){ return g.name; }));
+                    Object.keys(m).forEach(function(driver){
+                      var d = String(driver);
+                      if(!driversSet.has(d)) return;
+                      var arr = Array.isArray(m[driver]) ? m[driver].map(String).filter(function(n){ return goalsSet.has(n); }) : [];
+                      if(arr.length) AppState.driverGoals[d] = arr;
+                    });
+                  }
+                }
+              });
+              step('Objectives', function(){
+                if(obj && Array.isArray(obj.Objectives)){
+                  AppState.objectives = obj.Objectives.map(function(o){
+                    if(o && typeof o === 'object') return {
+                      name: String(o.name || ''),
+                      desc: String(o.desc || ''),
+                      owner: String(o.owner || ''),
+                      performanceIndicator: String(o.performanceIndicator || ''),
+                      targetPerformanceMetric: String(o.targetPerformanceMetric || '')
+                    };
+                    return { name: String(o || ''), desc: '', owner: '', performanceIndicator: '', targetPerformanceMetric: '' };
+                  }).filter(function(o){ return o.name.trim().length > 0; });
+                }
+              });
+              step('Strategic Plans', function(){
+                var spKey = Object.keys(obj).find(function(k){ return String(k).toLowerCase() === 'strategic plans'; });
+                if(spKey && Array.isArray(obj[spKey])){
+                  AppState.strategicPlans = obj[spKey].map(function(sp){
+                    if(sp && typeof sp === 'object') return { name: String(sp.name || ''), desc: String(sp.desc || ''), startDate: String(sp.startDate || ''), endDate: String(sp.endDate || '') };
+                    return { name: String(sp || ''), desc: '', startDate: '', endDate: '' };
+                  }).filter(function(sp){ return sp.name.trim().length > 0; });
+                }
+              });
+              step('Objective Strategic Plans Mapping', function(){
+                AppState.objectivePlans = {};
+                var k = Object.keys(obj).find(function(x){ return String(x).toLowerCase() === 'objective strategic plans mapping'; });
+                if(k){
+                  var mm = obj[k];
+                  if(mm && typeof mm === 'object'){
+                    var objSet = new Set((AppState.objectives||[]).map(function(o){ return o.name; }));
+                    var spSet = new Set((AppState.strategicPlans||[]).map(function(sp){ return sp.name; }));
+                    Object.keys(mm).forEach(function(ob){
+                      var on = String(ob);
+                      if(!objSet.has(on)) return;
+                      var arr = Array.isArray(mm[ob]) ? mm[ob].map(String).filter(function(n){ return spSet.has(n); }) : [];
+                      if(arr.length) AppState.objectivePlans[on] = arr;
+                    });
+                  }
+                }
+              });
+              step('Goal Objectives Mapping', function(){
+                AppState.goalObjectives = {};
+                var mapKey2 = Object.keys(obj).find(function(k){ return String(k).toLowerCase() === 'goal objectives mapping'; });
+                if(mapKey2){
+                  var m2 = obj[mapKey2];
+                  if(m2 && typeof m2 === 'object'){
+                    var goalsSet2 = new Set(AppState.goals.map(function(g){ return g.name; }));
+                    var objSet2 = new Set(AppState.objectives.map(function(o){ return o.name; }));
+                    Object.keys(m2).forEach(function(goal){
+                      var gname = String(goal);
+                      if(!goalsSet2.has(gname)) return;
+                      var arr2 = Array.isArray(m2[goal]) ? m2[goal].map(String).filter(function(n){ return objSet2.has(n); }) : [];
+                      if(arr2.length) AppState.goalObjectives[gname] = arr2;
+                    });
+                  }
+                }
+              });
+              step('Render', function(){
+                renderDrivers();
+                renderGoals();
+                renderObjectives();
+                renderStrategicPlans();
+              });
+              importModalEl.close();
+            }catch(err){
+              console.error('Error applying imported data:', err);
+              alert('Error applying data. Please review the structure.\n' + (err && err.message ? err.message : ''));
+            }
+          });
+        }
+
+        // Clear all data via dialog
+        function doClearAll(){
+          AppState.drivers = [];
+          AppState.goals = [];
+          AppState.objectives = [];
+          AppState.strategicPlans = [];
+          AppState.driverGoals = {};
+          AppState.goalObjectives = {};
+          AppState.objectivePlans = {};
+          // Reset transient selections/search
+          if(typeof linkingDriverName !== 'undefined') linkingDriverName = null;
+          if(typeof linkingGoalName !== 'undefined') linkingGoalName = null;
+          if(typeof linkingObjectiveName !== 'undefined') linkingObjectiveName = null;
+          if(typeof linkGoalSelectedSet !== 'undefined') linkGoalSelectedSet = new Set();
+          if(typeof linkObjectiveSelectedSet !== 'undefined') linkObjectiveSelectedSet = new Set();
+          if(objectivesSearchInput) objectivesSearchInput.value = '';
+          if(strategicPlansSearchInput) strategicPlansSearchInput.value = '';
+          // Re-render all views
+          renderDrivers();
+          renderGoals();
+          renderObjectives();
+          renderStrategicPlans();
+        }
+        if(clearAllBtn){
+          clearAllBtn.addEventListener('click', function(){ if(confirmClearAllDialog) confirmClearAllDialog.showModal(); });
+        }
+        if(cancelClearAllBtn){ cancelClearAllBtn.addEventListener('click', function(){ if(confirmClearAllDialog) confirmClearAllDialog.close(); }); }
+        if(confirmClearAllBtn){ confirmClearAllBtn.addEventListener('click', function(){ doClearAll(); if(confirmClearAllDialog) confirmClearAllDialog.close(); }); }
+
+        // Driver list handlers (associate / remove)
+        driversList.addEventListener('click', function(e){
+          var btn;
+          // Associate Goals
+          btn = e.target.closest('[data-action="link-goals"]');
+          if(btn){
+            var i = Number(btn.getAttribute('data-index'));
+            if(!Number.isNaN(i)){
+              linkingDriverName = AppState.drivers[i];
+              linkDriverNameEl.textContent = linkingDriverName;
+              driverGoalsCheckboxes.innerHTML = '';
+              if(AppState.goals.length === 0){
+                var p = document.createElement('p'); p.className = 'muted'; p.textContent = 'No Goals registered. Add them in the "Goals" tab.'; driverGoalsCheckboxes.appendChild(p);
+              }else{
+                var selected = new Set((AppState.driverGoals[linkingDriverName]||[]));
+                AppState.goals.forEach(function(g, idx2){
+                  var id = 'goal-' + idx2; var wrap = document.createElement('label');
+                  var cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = id; cb.value = g.name; cb.checked = selected.has(g.name);
+                  var span = document.createElement('span'); span.textContent = g.name; wrap.append(cb, span); driverGoalsCheckboxes.appendChild(wrap);
+                });
+              }
+              linkDriverGoalsDialog.showModal();
+            }
+            return;
+          }
+          // Edit driver
+          btn = e.target.closest('[data-action="edit-driver"]');
+          if(btn){
+            var idxE = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idxE)) return;
+            editingDriverIndex = idxE;
+            editDriverNameInput.value = AppState.drivers[idxE] || '';
+            editDriverDialog.showModal();
+            setTimeout(function(){ editDriverNameInput.select(); }, 0);
+            return;
+          }
+          // Remove driver
+          btn = e.target.closest('[data-action="remove"]');
+          if(btn){
+            var idx = Number(btn.getAttribute('data-index'));
+            if(Number.isNaN(idx)) return;
+            var removed = AppState.drivers.splice(idx, 1)[0];
+            if(removed && AppState.driverGoals){ delete AppState.driverGoals[removed]; }
+            renderDrivers();
+            return;
+          }
+        });
+
+        // Live filter for Goal->Objectives association
+        if(goalObjectivesSearch){
+          goalObjectivesSearch.addEventListener('input', function(){
+            renderGoalObjectivesOptions(goalObjectivesSearch.value || '');
+          });
+        }
+
+        // Save edited driver
+        editDriverForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          var newName = (editDriverNameInput.value || '').trim();
+          if(editingDriverIndex < 0){ editDriverDialog.close(); return; }
+          var oldName = AppState.drivers[editingDriverIndex];
+          if(!newName || newName === oldName){ editDriverDialog.close(); return; }
+          // Update array
+          AppState.drivers[editingDriverIndex] = newName;
+          // Migrate mapping
+          if(AppState.driverGoals){
+            var existingOld = AppState.driverGoals[oldName] || [];
+            var existingNew = AppState.driverGoals[newName] || [];
+            if(existingOld.length){
+              var merged = Array.from(new Set([].concat(existingNew, existingOld)));
+              AppState.driverGoals[newName] = merged;
+              delete AppState.driverGoals[oldName];
+            }
+          }
+          editingDriverIndex = -1;
+          editDriverDialog.close();
+          renderDrivers();
+        });
+        cancelEditDriverBtn.addEventListener('click', function(){ editingDriverIndex = -1; editDriverDialog.close(); });
+
+        // Save associations
+        linkDriverGoalsForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          if(!linkingDriverName){ linkDriverGoalsDialog.close(); return; }
+          var selected = [];
+          driverGoalsCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ if(cb.checked) selected.push(cb.value); });
+          var validGoalNames = new Set(AppState.goals.map(function(g){ return g.name; }));
+          AppState.driverGoals[linkingDriverName] = selected.filter(function(n){ return validGoalNames.has(n); });
+          linkingDriverName = null;
+          linkDriverGoalsDialog.close();
+          // refresh driver cards summary
+          renderDrivers();
+        });
+        cancelLinkDriverGoalsBtn.addEventListener('click', function(){ linkingDriverName = null; linkDriverGoalsDialog.close(); });
+
+        // Initial render
+        renderDrivers();
+        renderGoals();
+      })();
+    </script>
+
+  </div>
+</body>
+</html>

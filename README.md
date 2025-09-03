@@ -9,13 +9,16 @@ The single-page approach is intentional: it provides a friendlier, simpler exper
 ## Status
 
 - ✅ Available editor: **Value Stream Editor** (`editors/value-stream-editor-en-standalone.html`)
+- ✅ Available editor: **Strategic Summary Editor** (`editors/strategic-summary-editor-en-standalone.html`)
 - 🧩 Next: additional editors (capabilities, apps, processes, etc.)
 
 ## Quick Start
 
 1. Clone the repo.
-2. Open `editors/value-stream-editor-en-standalone.html` in a modern browser (Chrome/Edge/Firefox).
-3. Fill in the form, then **Export JSON** or **Export .dup**.
+2. Open one of the editors in a modern browser (Chrome/Edge/Firefox):
+   - Value Streams: `editors/value-stream-editor-en-standalone.html`
+   - Strategic Summary (Drivers/Goals/Objectives/Plans): `editors/strategic-summary-editor-en-standalone.html`
+3. Fill in the data, then use **Export JSON** or **Create DUP**.
 4. Import the `.dup` into Essential (Open/Docker/Cloud).
 
 ## What It’s For
@@ -38,10 +41,22 @@ The Value Stream Editor allows you to capture the information presented in the f
 
 ![Value Stream Canvas tab](assets/images/value-stream-editor/value-stream-canvas.png)
 
+### Strategic Summary Editor scope
+
+The Strategic Summary Editor allows you to capture the information presented in the following Essential views:
+
+- **Business Strategy Overview**
+- **Strategic Goals Model**
+
+![Strategy Essential](assets/images/strategic-summary-editor/strategic-essential.png)
+
+#### Screenshots
+
+![Strategic Summary tab](assets/images/strategic-summary-editor/strategic-summary.png)
 
 ## Repository Layout (high level)
 
 - `editors/` — standalone HTML editors  
-- `examples/` — sample JSON files  
+- `examples/` — sample JSON files (e.g., `value-stream-template.json`, `strategic-summary-template.json`)  
 - `docs/` — guides and documentation  
 - `assets/` — screenshots
