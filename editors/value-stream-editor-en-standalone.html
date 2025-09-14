@@ -239,6 +239,8 @@ defineExternalRepository(externalRepository, "")
   VSE.PROCESS_ROW_INDEX = VSE.vsRows.indexOf('Supporting Business Processes');
   VSE.KPI_ROW_INDEX = VSE.vsRows.indexOf('KPIs');
   VSE.vsStages = []; VSE.vsStageMeta = []; VSE.processesMap = {}; VSE.supplierApps = {}; VSE.clientAdvertLinks = {};
+  // Which box supports Org/Applications/Info associations; user-selectable, independent of title
+  VSE.clientAssocBoxKey = null;
   VSE.$ = (sel, root=document) => root.querySelector(sel);
   VSE.$$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
   VSE.escapeHtml = (s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -373,6 +375,16 @@ defineExternalRepository(externalRepository, "")
     <div class="modal-actions"><button class="btn-secondary" type="button" id="cancelVSProcessBtn">Cancel</button><button value="ok">Add</button></div>
   </form>
 </dialog>
+<dialog id="editVSProcessModal" aria-labelledby="editVSProcessTitle">
+  <div class="modal-header" id="editVSProcessTitle">Edit Process</div>
+  <form method="dialog" id="editVSProcessForm">
+    <div class="modal-body">
+      <div class="field"><label for="editVSProcessName">Process name</label><input id="editVSProcessName" name="editVSProcessName" type="text" placeholder="e.g., Approve Order" required /></div>
+      <div class="field"><label for="editVSProcessStage">Value Stage</label><select id="editVSProcessStage" name="editVSProcessStage" required></select><div class="muted">Changing the stage will move the process in the matrix.</div></div>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" type="button" id="cancelEditVSProcessBtn">Cancel</button><button value="ok">Save</button></div>
+  </form>
+</dialog>
 <dialog id="linkSuppliersModal" aria-labelledby="linkSuppliersTitle">
   <div class="modal-header" id="linkSuppliersTitle">Associate Applications</div>
   <form method="dialog" id="linkSuppliersForm">
@@ -386,7 +398,10 @@ defineExternalRepository(externalRepository, "")
   <div class="modal-actions"><button class="btn-secondary" type="button" id="cancelClearBtn">Cancel</button><button type="button" id="confirmClearBtn">Clear</button></div>
 </dialog>`; root.innerHTML=tpl;})();</script>
   <script>(function(){const V=window.VSE;const{$,escapeHtml,uniquePush}=V;const grid=$('#grid');
-function getClientAdvertKey(){for(let i=1;i<=6;i++){const key=`box${i}`;if((V.labels[key]||'').trim()==='Client Advert to Engage')return key;}return null;}
+function getClientAdvertKey(){
+  // Only explicit user selection defines the association box
+  return V.clientAssocBoxKey || null;
+}
 // Expose for other script blocks (export/import handlers)
 window.getClientAdvertKey = getClientAdvertKey;
 function renderAll(){grid.innerHTML='';for(let i=1;i<=6;i++){const key=`box${i}`;const boxEl=document.createElement('div');boxEl.className='box'+((i===3||i===6)?' span-2':'');boxEl.dataset.key=key;boxEl.innerHTML=`
@@ -396,7 +411,14 @@ function renderAll(){grid.innerHTML='';for(let i=1;i<=6;i++){const key=`box${i}`
       <button class="btn-secondary addBtn" data-key="${key}" title="Add item to ${V.labels[key]}">+ Add</button>
     </div>
   </div>
-  <div class="list" id="list-${key}"></div>`;grid.appendChild(boxEl);if(key==='box3'){const actionsEl=boxEl.querySelector('.box-header .actions');const editBtn=document.createElement('button');editBtn.className='btn-secondary editTitleBtn';editBtn.dataset.key=key;editBtn.title='Edit title';editBtn.textContent='✎ Title';actionsEl.prepend(editBtn);}renderBox(key);if(key==='box3')setupDndForBox3();}}V.renderCanvasAll=renderAll;
+  <div class="list" id="list-${key}"></div>`;grid.appendChild(boxEl);{
+    const actionsEl=boxEl.querySelector('.box-header .actions');
+    // Title edit button
+    const editBtn=document.createElement('button');editBtn.className='btn-secondary editTitleBtn';editBtn.dataset.key=key;editBtn.title='Edit title';editBtn.textContent='✎ Title';actionsEl.prepend(editBtn);
+    // Association toggle button (user selects which box supports Org/Apps/Info)
+    const assocBtn=document.createElement('button');assocBtn.className='btn-secondary assocBtn';assocBtn.dataset.key=key;assocBtn.title='Use this box for Associations';assocBtn.textContent=(V.clientAssocBoxKey===key)?'★ Assoc':'☆ Assoc';actionsEl.append(assocBtn);
+  }
+  renderBox(key);if(key==='box3')setupDndForBox3();}}V.renderCanvasAll=renderAll;
 function applyInvalidDecoration(key){
   if(key==='box1'){
     const appsSet=new Set(V.state.box6);
@@ -474,14 +496,117 @@ function openLinkClientAdvertModal(name){linkingClientItem=name;linkClientAdvert
 linkClientAdvertForm.addEventListener('submit',e=>{e.preventDefault();if(!linkingClientItem){linkClientAdvertModal.close();return;}const orgSel=clientOrgRadios.querySelector('input[type="radio"]:checked');const org=orgSel?orgSel.value:'';const locSel=clientLocationRadios.querySelector('input[type="radio"]:checked');const location=locSel?locSel.value:'';const apps=[];clientAppsCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(cb=>{if(cb.checked)apps.push(cb.value);});const info=[];clientInfoCheckboxes.querySelectorAll('input[type="checkbox"]').forEach(cb=>{if(cb.checked)info.push(cb.value);});V.clientAdvertLinks[linkingClientItem]={org,location,apps,info};linkingClientItem=null;linkClientAdvertModal.close();const key=getClientAdvertKey();if(key)V.renderBox(key);});
 cancelClientAdvertBtn.addEventListener('click',()=>{linkingClientItem=null;linkClientAdvertModal.close();});
 grid.addEventListener('click',e=>{const editTitleBtn=e.target.closest('.editTitleBtn');if(editTitleBtn){openEditTitleModal(editTitleBtn.dataset.key);return;}const linkBtn=e.target.closest('[data-action="link"]');if(linkBtn){const key=linkBtn.dataset.key;const index=Number(linkBtn.dataset.index);if(key==='box1'){openLinkModal(V.state.box1[index]);return;}}const linkClientBtn=e.target.closest('[data-action="link-client"]');if(linkClientBtn){const key=linkClientBtn.dataset.key;const index=Number(linkClientBtn.dataset.index);const clientKey=getClientAdvertKey();if(clientKey&&key===clientKey){openLinkClientAdvertModal(V.state[key][index]);return;}}const editItemBtn=e.target.closest('[data-action="edit"]');if(editItemBtn){openEditItemModal(editItemBtn.dataset.key,Number(editItemBtn.dataset.index));return;}const addBtn=e.target.closest('.addBtn');if(addBtn){const key=addBtn.dataset.key;if(key==='box3'){if(V.vsStages.length===0){alert('First add at least one Value Stage in the Summary tab.');return;}openAddVSProcessModal();}else{openInputModal(key);}return;}const removeBtn=e.target.closest('[data-action="remove"]');if(removeBtn){const key=removeBtn.dataset.key;const index=Number(removeBtn.dataset.index);if(key==='box3'){const name=V.state.box3[index];removeProcess(name);}else if(key==='box1'){const name=V.state.box1[index];delete V.supplierApps[name];V.removeItem(key,index);renderBox('box6');}else if(key==='box6'){const app=V.state.box6[index];Object.keys(V.supplierApps).forEach(s=>{V.supplierApps[s]=(V.supplierApps[s]||[]).filter(a=>a!==app);});V.removeItem(key,index);renderBox('box1');}else if(key==='box4'){const name=V.state.box4[index];V.removeItem(key,index);}else if(key==='box2'){V.removeItem(key,index);}else{const clientKey=getClientAdvertKey();if(clientKey&&key===clientKey){const removed=V.state[key][index];delete V.clientAdvertLinks[removed];}V.removeItem(key,index);}}});
+// Toggle which box supports associations
+grid.addEventListener('click',e=>{const assocBtn=e.target.closest('.assocBtn');if(!assocBtn)return;const key=assocBtn.dataset.key;V.clientAssocBoxKey=key;V.renderCanvasAll();});
 window.openInputModal=function(forKey){const modal=$('#inputModal');const itemName=$('#itemName');modal.showModal();itemName.value='';modal.dataset.key=forKey;setTimeout(()=>itemName.focus(),0);};
 window.openEditTitleModal=function(forKey){const modal=$('#editTitleModal');const titleInput=$('#titleInput');modal.showModal();modal.dataset.key=forKey;titleInput.value=V.labels[forKey]||'';setTimeout(()=>titleInput.select(),0);};
-window.openEditItemModal=function(forKey,index){const modal=$('#editItemModal');const input=$('#editItemName');modal.showModal();modal.dataset.key=forKey;modal.dataset.index=String(index);input.value=V.state[forKey][index]||'';setTimeout(()=>input.select(),0);};
+// (Replaced below with a version that supports editing processes with stage)
 window.openAddVSProcessModal=function(){const modal=$('#addVSProcessModal');const name=$('#vsProcessName');const sel=$('#vsProcessStage');sel.innerHTML='';V.vsStages.forEach((s,i)=>{const opt=document.createElement('option');opt.value=String(i);opt.textContent=s;sel.appendChild(opt);});modal.showModal();name.value='';setTimeout(()=>name.focus(),0);};
+// Add Process modal handlers
+const addVSProcessModal=$('#addVSProcessModal');
+const addVSProcessForm=$('#addVSProcessForm');
+const vsProcessName=$('#vsProcessName');
+const vsProcessStage=$('#vsProcessStage');
+const cancelVSProcessBtn=$('#cancelVSProcessBtn');
+if(addVSProcessForm){
+  addVSProcessForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    const name=(vsProcessName?.value||'').trim();
+    const stageIdx=Number(vsProcessStage?.value||'');
+    if(name && Number.isFinite(stageIdx)){
+      window.addProcessToStage(name, stageIdx);
+    }
+    addVSProcessModal.close();
+  });
+}
+if(cancelVSProcessBtn){
+  cancelVSProcessBtn.addEventListener('click',()=>addVSProcessModal.close());
+}
+
+// Edit Process modal: open + submit
+const editVSProcessModal=$('#editVSProcessModal');
+const editVSProcessForm=$('#editVSProcessForm');
+const editVSProcessName=$('#editVSProcessName');
+const editVSProcessStage=$('#editVSProcessStage');
+const cancelEditVSProcessBtn=$('#cancelEditVSProcessBtn');
+
+window.openEditItemModal=function(forKey,index){
+  if(forKey==='box3'){
+    // Open dedicated process editor (name + stage)
+    const currentName=V.state.box3[index];
+    // Populate stages
+    editVSProcessStage.innerHTML='';
+    V.vsStages.forEach((s,i)=>{
+      const opt=document.createElement('option'); opt.value=String(i); opt.textContent=s; editVSProcessStage.appendChild(opt);
+    });
+    // Preselect current stage if known; otherwise default to 0
+    const stageIdx=(V.processesMap[currentName]!=null)?V.processesMap[currentName]:0;
+    editVSProcessStage.value=String(stageIdx);
+    // Fill name
+    editVSProcessName.value=currentName||'';
+    // Keep reference to index in dataset
+    editVSProcessModal.dataset.index=String(index);
+    editVSProcessModal.showModal();
+    setTimeout(()=>editVSProcessName.select(),0);
+    return;
+  }
+  // Fallback to generic editor for other boxes
+  const modal=$('#editItemModal'); const input=$('#editItemName');
+  modal.showModal(); modal.dataset.key=forKey; modal.dataset.index=String(index); input.value=V.state[forKey][index]||''; setTimeout(()=>input.select(),0);
+};
+
+if(editVSProcessForm){
+  editVSProcessForm.addEventListener('submit',e=>{
+    e.preventDefault();
+    const index=Number(editVSProcessModal.dataset.index||'-1');
+    if(index<0){ editVSProcessModal.close(); return; }
+    const oldName=V.state.box3[index];
+    const newName=(editVSProcessName?.value||'').trim();
+    const newStageIdx=Number(editVSProcessStage?.value||'');
+    if(!newName || !Number.isFinite(newStageIdx)){
+      editVSProcessModal.close();
+      return;
+    }
+    const oldStageIdx = V.processesMap[oldName];
+    // If stage changed, remove from old and add to new
+    if(oldStageIdx!=null && oldStageIdx!==newStageIdx){
+      const oldCol = oldStageIdx+1;
+      const itemsOld = window.getProcessesFromCell(oldCol);
+      const oi = itemsOld.indexOf(oldName);
+      if(oi>-1){ itemsOld.splice(oi,1); window.setProcessesInCell(oldCol, itemsOld); }
+      const newCol = newStageIdx+1;
+      const itemsNew = window.getProcessesFromCell(newCol);
+      if(!itemsNew.includes(newName)){ itemsNew.push(newName); window.setProcessesInCell(newCol, itemsNew); }
+    } else {
+      // Same stage: replace name in-place in the column if present
+      if(oldStageIdx!=null){
+        const col = oldStageIdx+1;
+        const items = window.getProcessesFromCell(col);
+        const i = items.indexOf(oldName);
+        if(i>-1){ items[i]=newName; window.setProcessesInCell(col, items); }
+      } else {
+        // No previous stage mapping: just add to chosen stage
+        const newCol = newStageIdx+1;
+        const itemsNew = window.getProcessesFromCell(newCol);
+        if(!itemsNew.includes(newName)){ itemsNew.push(newName); window.setProcessesInCell(newCol, itemsNew); }
+      }
+    }
+    // Update mapping
+    if(oldName!==newName) delete V.processesMap[oldName];
+    V.processesMap[newName]=newStageIdx;
+    // Update list item
+    V.state.box3[index]=newName;
+    V.renderBox('box3');
+    editVSProcessModal.close();
+  });
+}
+if(cancelEditVSProcessBtn){
+  cancelEditVSProcessBtn.addEventListener('click',()=>editVSProcessModal.close());
+}
 window.addProcessToStage=function(name,stageIdx){name=name.trim();if(!name)return;const tableCol=stageIdx+1;const oldStage=V.processesMap[name];if(oldStage!=null&&oldStage!==stageIdx){const oldTableCol=oldStage+1;const itemsOld=window.getProcessesFromCell(oldTableCol);const idxOld=itemsOld.indexOf(name);if(idxOld>-1){itemsOld.splice(idxOld,1);window.setProcessesInCell(oldTableCol,itemsOld);}}const items=window.getProcessesFromCell(tableCol);if(!items.includes(name)){items.push(name);window.setProcessesInCell(tableCol,items);}V.processesMap[name]=stageIdx;uniquePush(V.state.box3,name);V.renderBox('box3');};
 window.removeProcess=function(name){const stageIdx=V.processesMap[name];if(stageIdx!=null){const tableCol=stageIdx+1;const items=window.getProcessesFromCell(tableCol);const i=items.indexOf(name);if(i>-1){items.splice(i,1);window.setProcessesInCell(tableCol,items);}delete V.processesMap[name];}const idx=V.state.box3.indexOf(name);if(idx>-1)V.state.box3.splice(idx,1);V.renderBox('box3');};
 (function(){const inputModal=$('#inputModal');const inputForm=$('#inputForm');const itemName=$('#itemName');const cancelBtn=$('#cancelBtn');inputForm.addEventListener('submit',e=>{e.preventDefault();const key=inputModal.dataset.key;const val=itemName.value.trim();if(val)V.addItem(key,val);inputModal.close();});cancelBtn.addEventListener('click',()=>inputModal.close());
-const editTitleModal=$('#editTitleModal');const editTitleForm=$('#editTitleForm');const titleInput=$('#titleInput');const cancelEditTitleBtn=$('#cancelEditTitleBtn');editTitleForm.addEventListener('submit',e=>{e.preventDefault();const key=editTitleModal.dataset.key;const newTitle=titleInput.value.trim();if(newTitle){V.labels[key]=newTitle;const box=grid.querySelector(`.box[data-key="${key}"]`);if(box){const titleEl=box.querySelector('.box-title');if(titleEl)titleEl.textContent=newTitle;const addBtnEl=box.querySelector('.addBtn');if(addBtnEl)addBtnEl.setAttribute('title',`Add item to ${newTitle}`);}if(key==='box3')V.updateFlowNameLine();}editTitleModal.close();});cancelEditTitleBtn.addEventListener('click',()=>editTitleModal.close());
+const editTitleModal=$('#editTitleModal');const editTitleForm=$('#editTitleForm');const titleInput=$('#titleInput');const cancelEditTitleBtn=$('#cancelEditTitleBtn');editTitleForm.addEventListener('submit',e=>{e.preventDefault();const key=editTitleModal.dataset.key;const newTitle=titleInput.value.trim();if(newTitle){V.labels[key]=newTitle;const box=grid.querySelector(`.box[data-key="${key}"]`);if(box){const titleEl=box.querySelector('.box-title');if(titleEl)titleEl.textContent=newTitle;const addBtnEl=box.querySelector('.addBtn');if(addBtnEl)addBtnEl.setAttribute('title',`Add item to ${newTitle}`);}V.renderBox(key);if(key==='box3')V.updateFlowNameLine();}editTitleModal.close();});cancelEditTitleBtn.addEventListener('click',()=>editTitleModal.close());
 const editDescModal=$('#editDescModal');const editDescForm=$('#editDescForm');const flowDescInput=$('#flowDescInput');const cancelEditDescBtn=$('#cancelEditDescBtn');editDescForm.addEventListener('submit',e=>{e.preventDefault();V.flowDescription=(flowDescInput.value||'').trim();V.updateFlowDescriptionLine();editDescModal.close();});cancelEditDescBtn.addEventListener('click',()=>editDescModal.close());
 const editItemModal=$('#editItemModal');const editItemForm=$('#editItemForm');const editItemName=$('#editItemName');const cancelEditItemBtn=$('#cancelEditItemBtn');editItemForm.addEventListener('submit',e=>{e.preventDefault();const key=editItemModal.dataset.key;const index=Number(editItemModal.dataset.index);const oldVal=V.state[key][index];const newVal=editItemName.value.trim();if(!newVal){editItemModal.close();return;}V.state[key][index]=newVal;V.renderBox(key);if(key==='box3'){const stageIdx=V.processesMap[oldVal];if(stageIdx!=null){const tableCol=stageIdx+1;const items=window.getProcessesFromCell(tableCol);const i=items.indexOf(oldVal);if(i>-1){items[i]=newVal;window.setProcessesInCell(tableCol,items);}delete V.processesMap[oldVal];V.processesMap[newVal]=stageIdx;}}else if(key==='box1'){if(V.supplierApps[oldVal]){V.supplierApps[newVal]=V.supplierApps[oldVal];delete V.supplierApps[oldVal];}V.renderBox('box6');}else if(key==='box6'){Object.keys(V.supplierApps).forEach(s=>{V.supplierApps[s]=(V.supplierApps[s]||[]).map(a=>a===oldVal?newVal:a);});Object.keys(V.clientAdvertLinks).forEach(it=>{V.clientAdvertLinks[it].apps=(V.clientAdvertLinks[it].apps||[]).map(a=>a===oldVal?newVal:a);});V.renderBox('box1');const cKey=getClientAdvertKey();if(cKey)V.renderBox(cKey);}else if(key==='box4'){Object.keys(V.clientAdvertLinks).forEach(it=>{if(V.clientAdvertLinks[it]?.org===oldVal)V.clientAdvertLinks[it].org=newVal;});const cKey=getClientAdvertKey();if(cKey)V.renderBox(cKey);}else if(key==='box2'){Object.keys(V.clientAdvertLinks).forEach(it=>{if(V.clientAdvertLinks[it]?.location===oldVal)V.clientAdvertLinks[it].location=newVal;});const cKey=getClientAdvertKey();if(cKey)V.renderBox(cKey);}else if(key==='box5'){Object.keys(V.clientAdvertLinks).forEach(it=>{V.clientAdvertLinks[it].info=(V.clientAdvertLinks[it].info||[]).map(v=>v===oldVal?newVal:v);});const cKey=getClientAdvertKey();if(cKey)V.renderBox(cKey);}else {const cKey=getClientAdvertKey();if(cKey&&key===cKey){if(V.clientAdvertLinks[oldVal]){V.clientAdvertLinks[newVal]=V.clientAdvertLinks[oldVal];delete V.clientAdvertLinks[oldVal];}V.renderBox(cKey);} }editItemModal.close();});cancelEditItemBtn.addEventListener('click',()=>editItemModal.close());})();})();</script>
   <script>(function(){const V=window.VSE;const{$}=V;const summaryGrid=$('#summary-grid');const vsTable=$('#vsTable');const addStageBtn=$('#addStageBtn');
@@ -667,7 +792,8 @@ function rebuildMappingFromMatrix(){const vsTable=$('#vsTable');V.processesMap={
 function applyImportedData(obj){if(!obj||typeof obj!=='object')return;const fixedToKey={'suppliers':'box1','locations':'box2','value stream':'box3','org':'box4','info':'box5','applications':'box6','initiators':'sum1','initiation events':'sum2','initiation conditions':'sum3','outcome conditions':'sum4','outcomes':'sum5','impacted business services':'sum6'};const vsNameEntry=Object.keys(obj).find(k=>k.toLowerCase()==='value stream name');if(vsNameEntry){const name=String(obj[vsNameEntry]).trim();if(name)V.labels.box3=name;}const vsDescEntry=Object.keys(obj).find(k=>k.toLowerCase()==='value stream description');if(vsDescEntry){V.flowDescription=String(obj[vsDescEntry]||'').trim();}
 Object.keys(V.state).forEach(k=>V.state[k]=[]);for(const[k,v]of Object.entries(obj)){const lower=String(k).toLowerCase();if(['value stream name','value stages matrix','suppliers applications mapping','value stream associations'].includes(lower))continue;const mappedKey=fixedToKey[lower]||(k in V.state?k:null);if(!mappedKey)continue;V.state[mappedKey]=normaliseToStringArray(v);}const matrixKey=Object.keys(obj).find(k=>k.toLowerCase()==='value stages matrix');if(matrixKey)applyMatrixFromJSON(obj[matrixKey]);else V.processesMap={};
 V.supplierApps={};const mapKey=Object.keys(obj).find(k=>k.toLowerCase()==='suppliers applications mapping');if(mapKey){const m=obj[mapKey];if(m&&typeof m==='object'){const appsSet=new Set(V.state.box6);Object.entries(m).forEach(([supplier,arr])=>{const s=String(supplier);const list=Array.isArray(arr)?arr.map(String).filter(a=>appsSet.has(a)):[];V.supplierApps[s]=list;});}}
-V.clientAdvertLinks={};const clientKeyFound=Object.keys(obj).find(k=>k.toLowerCase()==='value stream associations');if(clientKeyFound){const m=obj[clientKeyFound];if(m&&typeof m==='object'){const clientKey=getClientAdvertKey();const itemsSet=new Set(clientKey?V.state[clientKey]:[]);const orgSet=new Set(V.state.box4);const appSet=new Set(V.state.box6);const infoSet=new Set(V.state.box5);const locSet=new Set(V.state.box2);Object.entries(m).forEach(([item,data])=>{const name=String(item);if(!itemsSet.has(name))return;const org=String((data&&data.Org)||'');const location=String((data&&data.Location)||'');const apps=Array.isArray(data?.Applications)?data.Applications.map(String).filter(a=>appSet.has(a)):[];const info=Array.isArray(data?.Info)?data.Info.map(String).filter(i=>infoSet.has(i)):[];V.clientAdvertLinks[name]={org:orgSet.has(org)?org:'',location:locSet.has(location)?location:'',apps,info};});}}
+V.clientAdvertLinks={};const clientKeyFound=Object.keys(obj).find(k=>k.toLowerCase()==='value stream associations');if(clientKeyFound){const m=obj[clientKeyFound];if(m&&typeof m==='object'){let assocKey=getClientAdvertKey();if(!assocKey){const keys=['box1','box2','box3','box4','box5','box6'];let bestKey=null;let bestCount=0;const assocNames=new Set(Object.keys(m).map(String));keys.forEach(k=>{const set=new Set(V.state[k]||[]);let cnt=0;assocNames.forEach(n=>{if(set.has(n))cnt++;});if(cnt>bestCount){bestCount=cnt;bestKey=k;}});if(bestCount>0){assocKey=bestKey;V.clientAssocBoxKey=bestKey;}}
+const itemsSet=new Set(assocKey?V.state[assocKey]:[]);const orgSet=new Set(V.state.box4);const appSet=new Set(V.state.box6);const infoSet=new Set(V.state.box5);const locSet=new Set(V.state.box2);Object.entries(m).forEach(([item,data])=>{const name=String(item);if(!itemsSet.has(name))return;const org=String((data&&data.Org)||'');const location=String((data&&data.Location)||'');const apps=Array.isArray(data?.Applications)?data.Applications.map(String).filter(a=>appSet.has(a)):[];const info=Array.isArray(data?.Info)?data.Info.map(String).filter(i=>infoSet.has(i)):[];V.clientAdvertLinks[name]={org:orgSet.has(org)?org:'',location:locSet.has(location)?location:'',apps,info};});}}
 V.renderCanvasAll();V.renderSummaryAll();V.renderBox('box3');V.renderBox('box1');V.renderBox('box6');V.renderBox('box4');V.renderBox('box2');const caKey=getClientAdvertKey();if(caKey)V.renderBox(caKey);V.updateFlowNameLine();V.updateFlowDescriptionLine();}
 window.applyImportedData=applyImportedData;
 importBtn.addEventListener('click',()=>{importTextarea.value='';if(importFile)importFile.value='';importModal.showModal();});cancelImportBtn.addEventListener('click',()=>importModal.close());importFile.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{importTextarea.value=String(reader.result||'');};reader.readAsText(f);});importForm.addEventListener('submit',e=>{e.preventDefault();try{const raw=(importTextarea.value||'').replace(/^\uFEFF/, '').trim();if(!raw){alert('Paste JSON or select a file before loading.');return;}const obj=JSON.parse(raw);applyImportedData(obj);importModal.close();}catch(err){alert('Invalid JSON. Check the content and try again.\n'+(err&&err.message?err.message:''));}});
