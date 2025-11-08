@@ -1,0 +1,1087 @@
+{
+  "Business Domains": [
+    {
+      "name": "Energy Co",
+      "description": "",
+      "children": [
+        {
+          "name": "Power Generation",
+          "description": "",
+          "children": [],
+          "businessCapabilities": [
+            {
+              "name": "Commissioning Management",
+              "description": "Commissioning projects for infrastructure"
+            },
+            {
+              "name": "Construction Management",
+              "description": "Construction of assets of the business such as buildings"
+            },
+            {
+              "name": "Emissions Management",
+              "description": "Management and monitoring of emissions levels for the organisation"
+            },
+            {
+              "name": "Equipment Management",
+              "description": "Tracking and monitoring of equipment for users within the organisation"
+            },
+            {
+              "name": "Facility Requirements & Design Management",
+              "description": "Facility requirements and design management to support site to build out"
+            },
+            {
+              "name": "Geological and Geophysical Management",
+              "description": "Monitoring of the environment within which generation is performed"
+            },
+            {
+              "name": "Handover Management",
+              "description": "Handover of implementations to the organisation"
+            },
+            {
+              "name": "Installation Management",
+              "description": "Installation of infrastructure capabilities"
+            },
+            {
+              "name": "Portfolio Management",
+              "description": "Management of the generation portfolio"
+            },
+            {
+              "name": "Priority Management",
+              "description": "Definition of the generation priority based on needs"
+            },
+            {
+              "name": "Programme Management",
+              "description": "The generation programmes"
+            },
+            {
+              "name": "Renewables Management",
+              "description": "Management of renewables capabilities such as wind, solar, etc"
+            }
+          ]
+        },
+        {
+          "name": "Transmission and Distribution",
+          "description": "",
+          "children": [],
+          "businessCapabilities": [
+            {
+              "name": "Asset Management",
+              "description": "Management of assets within the organisation"
+            },
+            {
+              "name": "Health & Safety Management",
+              "description": "Managing and monitoring of health and safety requirements in line with regulation"
+            },
+            {
+              "name": "Load Management",
+              "description": "Tracking of loads as part of the flow management"
+            },
+            {
+              "name": "Maintenance",
+              "description": "Maintenance of equipment and sites"
+            },
+            {
+              "name": "Maintenance Scheduling Management",
+              "description": "Planning of schedules to support the maintenance of equipment and sites"
+            },
+            {
+              "name": "Outage Management",
+              "description": "Management in the event of outages or incidents"
+            },
+            {
+              "name": "Performance Management",
+              "description": "Montioring of organisational assets to optimise performance"
+            },
+            {
+              "name": "Production Operations Management",
+              "description": "Operational management of flow"
+            },
+            {
+              "name": "Regulators Management",
+              "description": "Management of the regulators regarding energy flow"
+            },
+            {
+              "name": "Scheduling Management",
+              "description": "Scheduling of flows for the organisation"
+            },
+            {
+              "name": "Storage Management",
+              "description": "Management of storage capacity based on energy flowing in the network"
+            }
+          ]
+        },
+        {
+          "name": "Renewables",
+          "description": "",
+          "children": [],
+          "businessCapabilities": []
+        },
+        {
+          "name": "Digital Services",
+          "description": "Failure Prediction, performance monitoring.",
+          "children": [],
+          "businessCapabilities": [
+            {
+              "name": "Client Management",
+              "description": "The management of clients of the organisation"
+            },
+            {
+              "name": "Distributor Management",
+              "description": "Management of distributors within our network"
+            },
+            {
+              "name": "Meter Management",
+              "description": "Management of energy meters used by clients"
+            },
+            {
+              "name": "Reliability Monitoring",
+              "description": "Monitoring of assets and reliability for maintenance purposes"
+            }
+          ]
+        },
+        {
+          "name": "Management Services",
+          "description": "",
+          "children": [],
+          "businessCapabilities": [
+            {
+              "name": "Acquisition Management",
+              "description": "Monitoring and assessment of potential acquisitions for the organisation"
+            },
+            {
+              "name": "Alliance & Partner Strategy Management",
+              "description": "Strategy definition for alliances and partners"
+            },
+            {
+              "name": "Business Continuity Management",
+              "description": "Management of the business continuity in the event of a failure"
+            },
+            {
+              "name": "Corporate Risk Management",
+              "description": "Management of corporate risk"
+            },
+            {
+              "name": "Data Management",
+              "description": "The management of data assets within the organisation"
+            },
+            {
+              "name": "Employee Development",
+              "description": "Employee personal development and training etc"
+            },
+            {
+              "name": "External Relationship Management",
+              "description": "Management of external partners"
+            },
+            {
+              "name": "Facilities Management",
+              "description": "Buildings security, maintenance of premises and sites"
+            },
+            {
+              "name": "Finance Management",
+              "description": "Management of the organisation's financial requirements and obligations"
+            },
+            {
+              "name": "Financial Accounting",
+              "description": "Recording, summarising and reporting of the organisation's financial transactions"
+            },
+            {
+              "name": "Financial Risk Monitoring",
+              "description": "Ongoing monitoring of financial risk for exposure tracking purposes"
+            },
+            {
+              "name": "Forecasting Management",
+              "description": "Forecasting Management"
+            },
+            {
+              "name": "Hedging Management",
+              "description": "Management of hedging requirements for the business to mitigate risk"
+            },
+            {
+              "name": "HR Management",
+              "description": "The management of Human Resources"
+            },
+            {
+              "name": "Inventory Management",
+              "description": "Management of the inventory of assets"
+            },
+            {
+              "name": "IT Management",
+              "description": "Management of information technology to support the business"
+            },
+            {
+              "name": "Legal Management",
+              "description": "Management of legal requirements to support the business"
+            },
+            {
+              "name": "Logistics Management",
+              "description": "Logistics to ensure smooth flow of assets and materials to and from sites"
+            },
+            {
+              "name": "Materials Management",
+              "description": "Management of materials required by the organisation"
+            },
+            {
+              "name": "Operating Strategy Management",
+              "description": "Definition of the operating strategy for the organisation"
+            },
+            {
+              "name": "Opportunity Management",
+              "description": "Management of opportunities the organisation can leverage to improve itself"
+            },
+            {
+              "name": "Order Management",
+              "description": "Management of orders for equipment and inventory"
+            },
+            {
+              "name": "Payroll Processing",
+              "description": "Processing of staff payroll"
+            },
+            {
+              "name": "Portfolio Risk Management",
+              "description": "Management and monitoring of the portfolio risk"
+            },
+            {
+              "name": "Receivables Management",
+              "description": "Management of receivables"
+            },
+            {
+              "name": "Recruitment",
+              "description": "Recruitment of resources into the business"
+            },
+            {
+              "name": "Regulatory Compliance",
+              "description": "Compliance with regulator leads"
+            },
+            {
+              "name": "Regulatory Compliance Management",
+              "description": "Management of regulator compliance and risk"
+            },
+            {
+              "name": "Remuneration, Rewards and Retention",
+              "description": "Employee management and pay"
+            },
+            {
+              "name": "Retirement Planning",
+              "description": "Monitoring of retirement requirements of the organisation"
+            },
+            {
+              "name": "Strategic Relationship Management",
+              "description": "Managing relationships from a strategic perspective"
+            },
+            {
+              "name": "Supplier Management",
+              "description": "Management of suppliers to the organisation"
+            },
+            {
+              "name": "Target Management & Monitoring",
+              "description": "Monitoring of targets and performance against those targets of the organisation"
+            }
+          ]
+        }
+      ],
+      "businessCapabilities": []
+    },
+    {
+      "name": "Sales and Marketing",
+      "description": "",
+      "children": [],
+      "businessCapabilities": [
+        {
+          "name": "Advertising Management",
+          "description": "Capability focused on advertising strategy and production"
+        },
+        {
+          "name": "Brand Management",
+          "description": "Capability (focused) on defining and managing the company brand"
+        },
+        {
+          "name": "Customer Communications",
+          "description": "Capability focused on managing communications with clients"
+        },
+        {
+          "name": "Customer Strategy",
+          "description": "Capability focussed on defining the customer strategy"
+        },
+        {
+          "name": "Demand and Forecast Analytics",
+          "description": "Capability focused on analytics to undertand and forecast furture demand to feed into sales and marketing planning"
+        },
+        {
+          "name": "Pricing Strategy",
+          "description": "Capability focussed on defining the pricing  strategy for different products and clients"
+        },
+        {
+          "name": "Sales and Marketing",
+          "description": "Capability focusing on sales and marketing activities such as advertising and segmentation, with the aim of acquiring new customers and retaining existing customers"
+        },
+        {
+          "name": "Sales and Promotion Planning",
+          "description": "Sales and promotion activities to acquire new and retain existing customers"
+        },
+        {
+          "name": "Sales Execution",
+          "description": "Execute Sales"
+        }
+      ]
+    }
+  ],
+  "Business Capabilities": [
+    {
+      "name": "Energy",
+      "description": "",
+      "purpose": ""
+    },
+    {
+      "name": "Corporate Management",
+      "description": "",
+      "purpose": ""
+    },
+    {
+      "name": "Business Continuity Management",
+      "description": "Management of the business continuity in the event of a failure",
+      "purpose": ""
+    },
+    {
+      "name": "Corporate Risk Management",
+      "description": "Management of corporate risk",
+      "purpose": ""
+    },
+    {
+      "name": "External Relationship Management",
+      "description": "Management of external partners",
+      "purpose": ""
+    },
+    {
+      "name": "Regulatory Compliance",
+      "description": "Compliance with regulator leads",
+      "purpose": ""
+    },
+    {
+      "name": "Corporate Support",
+      "description": "",
+      "purpose": ""
+    },
+    {
+      "name": "Acquisition Management",
+      "description": "Monitoring and assessment of potential acquisitions for the organisation",
+      "purpose": "Control"
+    },
+    {
+      "name": "Alliance & Partner Strategy Management",
+      "description": "Strategy definition for alliances and partners",
+      "purpose": ""
+    },
+    {
+      "name": "Data Management",
+      "description": "The management of data assets within the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Facilities Management",
+      "description": "Buildings security, maintenance of premises and sites",
+      "purpose": ""
+    },
+    {
+      "name": "Finance Management",
+      "description": "Management of the organisation's financial requirements and obligations",
+      "purpose": ""
+    },
+    {
+      "name": "Financial Accounting",
+      "description": "Recording, summarising and reporting of the organisation's financial transactions",
+      "purpose": ""
+    },
+    {
+      "name": "Payroll Processing",
+      "description": "Processing of staff payroll",
+      "purpose": ""
+    },
+    {
+      "name": "HR Management",
+      "description": "The management of Human Resources",
+      "purpose": ""
+    },
+    {
+      "name": "Employee Development",
+      "description": "Employee personal development and training etc",
+      "purpose": ""
+    },
+    {
+      "name": "Recruitment",
+      "description": "Recruitment of resources into the business",
+      "purpose": ""
+    },
+    {
+      "name": "Remuneration, Rewards and Retention",
+      "description": "Employee management and pay",
+      "purpose": ""
+    },
+    {
+      "name": "Retirement Planning",
+      "description": "Monitoring of retirement requirements of the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "HR Planning and Policies",
+      "description": "",
+      "purpose": ""
+    },
+    {
+      "name": "IT Management",
+      "description": "Management of information technology to support the business",
+      "purpose": ""
+    },
+    {
+      "name": "Legal Management",
+      "description": "Management of legal requirements to support the business",
+      "purpose": ""
+    },
+    {
+      "name": "Strategic Relationship Management",
+      "description": "Managing relationships from a strategic perspective",
+      "purpose": ""
+    },
+    {
+      "name": "Supplier Management",
+      "description": "Management of suppliers to the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Delivery",
+      "description": "",
+      "purpose": ""
+    },
+    {
+      "name": "Distribution",
+      "description": "Capability supporting business delivery from the client facing perspective",
+      "purpose": ""
+    },
+    {
+      "name": "Client Management",
+      "description": "The management of clients of the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Distributor Management",
+      "description": "Management of distributors within our network",
+      "purpose": ""
+    },
+    {
+      "name": "Meter Management",
+      "description": "Management of energy meters used by clients",
+      "purpose": ""
+    },
+    {
+      "name": "Product Development",
+      "description": "Developing products to meet demand from new clients",
+      "purpose": ""
+    },
+    {
+      "name": "Flow Management",
+      "description": "Management of energy flow into the overall network",
+      "purpose": ""
+    },
+    {
+      "name": "Load Management",
+      "description": "Tracking of loads as part of the flow management",
+      "purpose": ""
+    },
+    {
+      "name": "Production Operations Management",
+      "description": "Operational management of flow",
+      "purpose": ""
+    },
+    {
+      "name": "Regulators Management",
+      "description": "Management of the regulators regarding energy flow",
+      "purpose": ""
+    },
+    {
+      "name": "Scheduling Management",
+      "description": "Scheduling of flows for the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Storage Management",
+      "description": "Management of storage capacity based on energy flowing in the network",
+      "purpose": ""
+    },
+    {
+      "name": "Generation",
+      "description": "Generation of energy via various mechanisms",
+      "purpose": ""
+    },
+    {
+      "name": "Emissions Management",
+      "description": "Management and monitoring of emissions levels for the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Geological and Geophysical Management",
+      "description": "Monitoring of the environment within which generation is performed",
+      "purpose": ""
+    },
+    {
+      "name": "Portfolio Management",
+      "description": "Management of the generation portfolio",
+      "purpose": ""
+    },
+    {
+      "name": "Priority Management",
+      "description": "Definition of the generation priority based on needs",
+      "purpose": ""
+    },
+    {
+      "name": "Programme Management",
+      "description": "The generation programmes",
+      "purpose": ""
+    },
+    {
+      "name": "Renewables Management",
+      "description": "Management of renewables capabilities such as wind, solar, etc",
+      "purpose": ""
+    },
+    {
+      "name": "Sales and Marketing",
+      "description": "Capability focusing on sales and marketing activities such as advertising and segmentation, with the aim of acquiring new customers and retaining existing customers",
+      "purpose": ""
+    },
+    {
+      "name": "Advertising Management",
+      "description": "Capability focused on advertising strategy and production",
+      "purpose": ""
+    },
+    {
+      "name": "Brand Management",
+      "description": "Capability (focused) on defining and managing the company brand",
+      "purpose": ""
+    },
+    {
+      "name": "Customer Communications",
+      "description": "Capability focused on managing communications with clients",
+      "purpose": ""
+    },
+    {
+      "name": "Customer Strategy",
+      "description": "Capability focussed on defining the customer strategy",
+      "purpose": ""
+    },
+    {
+      "name": "Demand and Forecast Analytics",
+      "description": "Capability focused on analytics to undertand and forecast furture demand to feed into sales and marketing planning",
+      "purpose": ""
+    },
+    {
+      "name": "Pricing Strategy",
+      "description": "Capability focussed on defining the pricing  strategy for different products and clients",
+      "purpose": ""
+    },
+    {
+      "name": "Sales and Promotion Planning",
+      "description": "Sales and promotion activities to acquire new and retain existing customers",
+      "purpose": ""
+    },
+    {
+      "name": "Sales Execution",
+      "description": "Execute Sales",
+      "purpose": ""
+    },
+    {
+      "name": "Design, Construction & Installation",
+      "description": "The delivery of infrastructure to support the energy business",
+      "purpose": ""
+    },
+    {
+      "name": "Commissioning Management",
+      "description": "Commissioning projects for infrastructure",
+      "purpose": ""
+    },
+    {
+      "name": "Construction Management",
+      "description": "Construction of assets of the business such as buildings",
+      "purpose": ""
+    },
+    {
+      "name": "Equipment Management",
+      "description": "Tracking and monitoring of equipment for users within the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Facility Requirements & Design Management",
+      "description": "Facility requirements and design management to support site to build out",
+      "purpose": ""
+    },
+    {
+      "name": "Handover Management",
+      "description": "Handover of implementations to the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Installation Management",
+      "description": "Installation of infrastructure capabilities",
+      "purpose": ""
+    },
+    {
+      "name": "Maintenance",
+      "description": "Maintenance of equipment and sites",
+      "purpose": ""
+    },
+    {
+      "name": "Asset Management",
+      "description": "Management of assets within the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Inventory Management",
+      "description": "Management of the inventory of assets",
+      "purpose": ""
+    },
+    {
+      "name": "Materials Management",
+      "description": "Management of materials required by the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Order Management",
+      "description": "Management of orders for equipment and inventory",
+      "purpose": ""
+    },
+    {
+      "name": "Receivables Management",
+      "description": "Management of receivables",
+      "purpose": ""
+    },
+    {
+      "name": "Health & Safety Management",
+      "description": "Managing and monitoring of health and safety requirements in line with regulation",
+      "purpose": ""
+    },
+    {
+      "name": "Maintenance Scheduling Management",
+      "description": "Planning of schedules to support the maintenance of equipment and sites",
+      "purpose": ""
+    },
+    {
+      "name": "Logistics Management",
+      "description": "Logistics to ensure smooth flow of assets and materials to and from sites",
+      "purpose": ""
+    },
+    {
+      "name": "Performance Management",
+      "description": "Montioring of organisational assets to optimise performance",
+      "purpose": ""
+    },
+    {
+      "name": "Reliability Monitoring",
+      "description": "Monitoring of assets and reliability for maintenance purposes",
+      "purpose": ""
+    },
+    {
+      "name": "Outage Management",
+      "description": "Management in the event of outages or incidents",
+      "purpose": ""
+    },
+    {
+      "name": "Performance Reporting",
+      "description": "",
+      "purpose": ""
+    },
+    {
+      "name": "Portfolio Strategy",
+      "description": "Overall strategy for the portfolio",
+      "purpose": ""
+    },
+    {
+      "name": "Forecasting Management",
+      "description": "Forecasting Management",
+      "purpose": ""
+    },
+    {
+      "name": "Operating Strategy Management",
+      "description": "Definition of the operating strategy for the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Opportunity Management",
+      "description": "Management of opportunities the organisation can leverage to improve itself",
+      "purpose": ""
+    },
+    {
+      "name": "Portfolio Risk Management",
+      "description": "Management and monitoring of the portfolio risk",
+      "purpose": ""
+    },
+    {
+      "name": "Target Management & Monitoring",
+      "description": "Monitoring of targets and performance against those targets of the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Risk Management",
+      "description": "Management of risk for the organisation",
+      "purpose": ""
+    },
+    {
+      "name": "Financial Risk Monitoring",
+      "description": "Ongoing monitoring of financial risk for exposure tracking purposes",
+      "purpose": ""
+    },
+    {
+      "name": "Hedging Management",
+      "description": "Management of hedging requirements for the business to mitigate risk",
+      "purpose": ""
+    },
+    {
+      "name": "Regulatory Compliance Management",
+      "description": "Management of regulator compliance and risk",
+      "purpose": ""
+    }
+  ],
+  "Business Capabilities Hierarchy": [
+    {
+      "name": "Energy",
+      "children": [
+        {
+          "name": "Corporate Management",
+          "children": [
+            {
+              "name": "Business Continuity Management",
+              "children": []
+            },
+            {
+              "name": "Corporate Risk Management",
+              "children": []
+            },
+            {
+              "name": "External Relationship Management",
+              "children": []
+            },
+            {
+              "name": "Regulatory Compliance",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Corporate Support",
+          "children": [
+            {
+              "name": "Acquisition Management",
+              "children": []
+            },
+            {
+              "name": "Alliance & Partner Strategy Management",
+              "children": []
+            },
+            {
+              "name": "Data Management",
+              "children": []
+            },
+            {
+              "name": "Facilities Management",
+              "children": []
+            },
+            {
+              "name": "Finance Management",
+              "children": [
+                {
+                  "name": "Financial Accounting",
+                  "children": []
+                },
+                {
+                  "name": "Payroll Processing",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "HR Management",
+              "children": [
+                {
+                  "name": "Employee Development",
+                  "children": []
+                },
+                {
+                  "name": "Recruitment",
+                  "children": []
+                },
+                {
+                  "name": "Remuneration, Rewards and Retention",
+                  "children": []
+                },
+                {
+                  "name": "Retirement Planning",
+                  "children": []
+                },
+                {
+                  "name": "HR Planning and Policies",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "IT Management",
+              "children": []
+            },
+            {
+              "name": "Legal Management",
+              "children": []
+            },
+            {
+              "name": "Strategic Relationship Management",
+              "children": []
+            },
+            {
+              "name": "Supplier Management",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Delivery",
+          "children": [
+            {
+              "name": "Distribution",
+              "children": [
+                {
+                  "name": "Client Management",
+                  "children": []
+                },
+                {
+                  "name": "Distributor Management",
+                  "children": []
+                },
+                {
+                  "name": "Meter Management",
+                  "children": []
+                },
+                {
+                  "name": "Product Development",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Flow Management",
+              "children": [
+                {
+                  "name": "Load Management",
+                  "children": []
+                },
+                {
+                  "name": "Production Operations Management",
+                  "children": []
+                },
+                {
+                  "name": "Regulators Management",
+                  "children": []
+                },
+                {
+                  "name": "Scheduling Management",
+                  "children": []
+                },
+                {
+                  "name": "Storage Management",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Generation",
+              "children": [
+                {
+                  "name": "Emissions Management",
+                  "children": []
+                },
+                {
+                  "name": "Geological and Geophysical Management",
+                  "children": []
+                },
+                {
+                  "name": "Portfolio Management",
+                  "children": []
+                },
+                {
+                  "name": "Priority Management",
+                  "children": []
+                },
+                {
+                  "name": "Programme Management",
+                  "children": []
+                },
+                {
+                  "name": "Renewables Management",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Sales and Marketing",
+              "children": [
+                {
+                  "name": "Advertising Management",
+                  "children": []
+                },
+                {
+                  "name": "Brand Management",
+                  "children": []
+                },
+                {
+                  "name": "Customer Communications",
+                  "children": []
+                },
+                {
+                  "name": "Customer Strategy",
+                  "children": []
+                },
+                {
+                  "name": "Demand and Forecast Analytics",
+                  "children": []
+                },
+                {
+                  "name": "Pricing Strategy",
+                  "children": []
+                },
+                {
+                  "name": "Sales and Promotion Planning",
+                  "children": []
+                },
+                {
+                  "name": "Sales Execution",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Design, Construction & Installation",
+          "children": [
+            {
+              "name": "Commissioning Management",
+              "children": []
+            },
+            {
+              "name": "Construction Management",
+              "children": []
+            },
+            {
+              "name": "Equipment Management",
+              "children": []
+            },
+            {
+              "name": "Facility Requirements & Design Management",
+              "children": []
+            },
+            {
+              "name": "Handover Management",
+              "children": []
+            },
+            {
+              "name": "Installation Management",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Maintenance",
+          "children": [
+            {
+              "name": "Asset Management",
+              "children": [
+                {
+                  "name": "Inventory Management",
+                  "children": []
+                },
+                {
+                  "name": "Materials Management",
+                  "children": []
+                },
+                {
+                  "name": "Order Management",
+                  "children": []
+                },
+                {
+                  "name": "Receivables Management",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Health & Safety Management",
+              "children": []
+            },
+            {
+              "name": "Maintenance Scheduling Management",
+              "children": [
+                {
+                  "name": "Logistics Management",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "name": "Performance Management",
+              "children": [
+                {
+                  "name": "Reliability Monitoring",
+                  "children": []
+                },
+                {
+                  "name": "Outage Management",
+                  "children": []
+                },
+                {
+                  "name": "Performance Reporting",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Portfolio Strategy",
+          "children": [
+            {
+              "name": "Forecasting Management",
+              "children": []
+            },
+            {
+              "name": "Operating Strategy Management",
+              "children": []
+            },
+            {
+              "name": "Opportunity Management",
+              "children": []
+            },
+            {
+              "name": "Portfolio Risk Management",
+              "children": []
+            },
+            {
+              "name": "Target Management & Monitoring",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Risk Management",
+          "children": [
+            {
+              "name": "Financial Risk Monitoring",
+              "children": []
+            },
+            {
+              "name": "Hedging Management",
+              "children": []
+            },
+            {
+              "name": "Regulatory Compliance Management",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

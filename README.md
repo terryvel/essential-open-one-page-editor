@@ -11,7 +11,8 @@ The single-page approach is intentional: it provides a friendlier, simpler exper
 - ✅ Available editor: **Value Stream Editor** (`editors/value-stream-editor-en-standalone.html`)
 - ✅ Available editor: **Strategic Summary Editor** (`editors/strategic-summary-editor-en-standalone.html`)
 - ✅ Available editor: **Business Process Editor (BPMN2)** (`editors/business-process-editor-en-standalone.html`)
-- 🧩 Next: additional editors (capabilities, apps, etc.)
+- ✅ Available editor: **Business Domain and Capability Editor** (`editors/business-domain-and-capability-editor-en-standalone.html`)
+- 🧩 Next: additional editors (apps, etc.)
 
 ## Quick Start
 
@@ -103,6 +104,16 @@ I also modeled a “Payment Approval” flow based on the examples from Camunda:
 https://camunda.com/bpmn/examples/
 
 ![Payment Approval](assets/business-process-editor/images/process-flow-designer-payment-approval.png)
+
+## Business Domain and Capability Editor
+
+The Business Domain and Capability Editor focuses on capturing Business Domains, Business Capabilities, and their associations and hierarchy so the architecture team can load a consistent capability map into Essential.
+
+File: `editors/business-domain-and-capability-editor-en-standalone.html`
+
+![Business Domains](assets/business-domain-and-capability-editor/images/business-domains.png)
+
+![Business Capabilities](assets/business-domain-and-capability-editor/images/business-capabilities.png)
 
 ## Repository Layout (high level)
 
